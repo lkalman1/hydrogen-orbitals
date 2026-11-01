@@ -163,7 +163,7 @@ const clickContinue = async (page) => {
   await page.waitForTimeout(400);
   await page.mouse.up();
   await page.waitForTimeout(1000);
-  await expectBeat(page, "2/coming-soon");
+  await expectBeat(page, "2/ladder");
 
   await page.locator("#menu-btn").click();
   await page.waitForTimeout(400);
@@ -178,7 +178,61 @@ const clickContinue = async (page) => {
   // back to the journey resumes where we were
   await page.locator("#journey-btn").click();
   await page.waitForTimeout(800);
-  await expectBeat(page, "2/coming-soon");
+  await expectBeat(page, "2/ladder");
+  await page.close();
+}
+
+// ---------------------------------------------------------------- chapter 2 (deep link)
+{
+  const page = await open("#ch2");
+  await page.locator("#begin-btn").click();
+  await page.waitForTimeout(1400);
+  await expectBeat(page, "2/ladder");
+  await shot(page, "20-ch2-ladder");
+  await clickContinue(page);
+  await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
+  // a miss: the photons pass straight through
+  await page.locator("#laser-nm").fill("252");
+  await page.locator("#fire-btn").click();
+  await page.waitForTimeout(450);
+  await shot(page, "21-ch2-miss");
+  await page.waitForTimeout(700);
+  // tune near the 1S–2S line; releasing the slider snaps onto it
+  await page.locator("#laser-nm").fill("243.5");
+  await page.locator("#laser-nm").dispatchEvent("change");
+  await page.waitForTimeout(300);
+  const tuned = await page.evaluate(() => window.__hydrogen.lab.nm);
+  if (Math.abs(tuned - 243.14) > 0.02) errors.push(`snap: laser at ${tuned}`);
+  await shot(page, "22-ch2-resonant");
+  await page.locator("#fire-btn").click();
+  await page.waitForTimeout(2000); // photons arrive at 0.8 s; the superposition is running
+  await shot(page, "23-ch2-superposition");
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "level-2", null, { timeout: 20000 });
+  const st2 = await page.evaluate(() => ({ ...window.__hydrogen.stage.cloud.state }));
+  if (st2.n !== 2 || st2.l !== 0) errors.push(`after 243 nm: cloud is ${JSON.stringify(st2)}`);
+  await page.waitForTimeout(1500);
+  await shot(page, "24-ch2-level2");
+  await clickContinue(page); // → why-two
+  await clickContinue(page); // → relax (completes by itself)
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "tune-3", null, { timeout: 20000 });
+  await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
+  await page.keyboard.press("Enter"); // fallback: tunes to 205 nm and fires
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "size", null, { timeout: 20000 });
+  await page.waitForTimeout(2200);
+  await shot(page, "25-ch2-level3-size");
+  await clickContinue(page);
+  await page.locator("#release-btn").waitFor({ state: "visible", timeout: 15000 });
+  await page.locator("#release-btn").click();
+  await page.waitForTimeout(1700);
+  await shot(page, "26-ch2-cascade");
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "spectrum", null, { timeout: 30000 });
+  const lines = await page.evaluate(() => [...window.__hydrogen.lab.spectrum.lines.values()].map((l) => +l.nm.toFixed(1)));
+  if (!lines.includes(656.5) || !lines.includes(121.6)) errors.push(`spectrum lines after the 3s cascade: ${lines}`);
+  await page.waitForTimeout(1500);
+  await shot(page, "27-ch2-spectrum");
+  await clickContinue(page);
+  await page.waitForTimeout(800);
+  await expectBeat(page, "3/coming-soon");
   await page.close();
 }
 
@@ -191,7 +245,7 @@ const clickContinue = async (page) => {
   await page.locator("#resume-btn").waitFor({ state: "visible" });
   await page.locator("#resume-btn").click();
   await page.waitForTimeout(1500);
-  await expectBeat(page, "2/coming-soon");
+  await expectBeat(page, "2/ladder");
   await page.close();
 }
 {
@@ -236,7 +290,21 @@ const clickContinue = async (page) => {
   await page.close();
 }
 
+{
+  const page = await open("#ch2", PHONE);
+  await page.locator("#begin-btn").click();
+  await clickContinue(page);
+  await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
+  await page.waitForTimeout(600);
+  await shot(page, "28-phone-ch2-tune");
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "level-2", null, { timeout: 20000 });
+  await page.waitForTimeout(1500);
+  await shot(page, "29-phone-ch2-level2");
+  await page.close();
+}
+
 await browser.close();
 server.close();
 if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-console.log("ok: prologue, chapter 1 measuring, drawer, glossary, menu, resume, deep links and phone layout checked; screenshots in tests/screenshots/");
+console.log("ok: prologue, chapter 1 measuring, chapter 2 laser/ladder/spectrum, drawer, glossary, menu, resume, deep links and phone layout checked; screenshots in tests/screenshots/");

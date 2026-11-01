@@ -19,15 +19,25 @@ hydrogen/
 │   ├── main.js               boot + routing (#ch0–#ch5, #sandbox, #n3l2m0)
 │   ├── physics.js            ψ_nlm, R_nl, Y_lm, energies, moments (M0 core)
 │   ├── sampler.js            exact inverse-CDF sampling of |ψ|² (M0 core)
+│   ├── spectroscopy.js       reduced-mass levels, wavelengths, Einstein A, lifetimes, colours
+│   ├── mixture.js            exact importance-weighted particles for superpositions
+│   ├── sample-worker.js      background worker: state and mixture sampling
 │   ├── sandbox.js            free-exploration UI (the M1 viewer) on the shared stage
 │   ├── scene/
 │   │   ├── stage.js          renderer, bloom, proton glow, axes, layout framing, frame loop
 │   │   ├── cloud.js          particle cloud: shader, morph / condense / instant, fades, measurement reveal
 │   │   ├── rig.js            spring orbit camera, scripted fly-to, tap detection
-│   │   └── markers.js        camera-facing radius ring + label (1 a₀)
+│   │   ├── markers.js        camera-facing radius ring + label (1 a₀, nodes, sizes)
+│   │   ├── superposition.js  renders Ψ(t) with per-particle weights in the shader
+│   │   ├── transition.js     coherent (laser) and incoherent (quantum-jump) transitions
+│   │   ├── sampling.js       promise client for the worker (main-thread fallback)
+│   │   └── photons.js        photon wave packets, laser beam, flashes
 │   ├── story/
 │   │   ├── engine.js         pure chapter → beat state machine, persistence, deep links
-│   │   ├── chapters.js       journey content (Ch 0–1 done; Ch 2–5 placeholders)
+│   │   ├── chapters.js       journey content (Ch 0–2 done; Ch 3–5 placeholders)
+│   │   ├── lab.js            Ch 2 lab: laser tuning, firing, decay cascades
+│   │   ├── ladder.js         SVG energy ladder with jumping electron and arrows
+│   │   ├── spectrum.js       emission spectrum barcode
 │   │   ├── measure.js        Ch 1 measuring tool: tap/hold, rings, tags, clicks
 │   │   ├── radial-chart.js   live histogram of measured distances vs exact P(r)
 │   │   ├── stats.js          pure helpers: exact 1s P(r), hold ramp, histogram
@@ -42,6 +52,7 @@ hydrogen/
 │   ├── reference.json        reference values (generated, committed so tests run without Python)
 │   ├── physics.test.mjs      JS physics vs reference (node --test)
 │   ├── story.test.mjs        story engine, content rules, audio timing, measurement stats (node --test)
+│   ├── spectroscopy.test.mjs wavelengths, lifetimes, branching, superposition rendering, resonance
 │   ├── screenshot.mjs        end-to-end browser run + screenshots
 │   └── screenshots/          (generated — not committed)
 └── node_modules/             (npm install — not committed)

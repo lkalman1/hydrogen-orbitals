@@ -8,6 +8,8 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { OrbitalCloud } from "./cloud.js";
 import { CameraRig } from "./rig.js";
+import { SuperpositionCloud } from "./superposition.js";
+import { Photons } from "./photons.js";
 
 const ORIGIN = new THREE.Vector3();
 
@@ -58,6 +60,13 @@ export function createStage(canvas, { reducedMotion = false, particles = 200000 
   const rig = new CameraRig(camera, canvas, { reducedMotion });
   const cloud = new OrbitalCloud({ count: particles, pixelRatio: renderer.getPixelRatio() });
   scene.add(cloud.object);
+  const superposition = new SuperpositionCloud({
+    pixelRatio: renderer.getPixelRatio(),
+    colorPos: cloud.uniforms.uColorPos.value,
+    colorNeg: cloud.uniforms.uColorNeg.value,
+  });
+  scene.add(superposition.object);
+  const photons = new Photons(scene, rig, camera);
 
   // ---- proton: a glow sprite, kept a constant size on screen (it is drawn far too big: labelled in the story)
   const proton = {
@@ -134,13 +143,14 @@ export function createStage(canvas, { reducedMotion = false, particles = 200000 
     axesScale.value += axesScale.vel * dt;
     axes.scale.setScalar(Math.max(1e-3, axesScale.value));
 
+    photons.update(now, dt);
     for (const fn of frameHandlers) fn(now, dt);
     composer.render(dt);
     requestAnimationFrame(frame);
   }
 
   return {
-    renderer, scene, camera, rig, cloud, proton, bloom,
+    renderer, scene, camera, rig, cloud, superposition, photons, proton, bloom,
     /** Provide a function returning the free {top, bottom} strip in CSS px. */
     setLayout(fn) { layout = fn; resize(); },
     resize,

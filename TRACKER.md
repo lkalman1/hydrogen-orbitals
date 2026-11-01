@@ -32,7 +32,7 @@ Status legend: ✅ done · 🟡 in progress · ⬜ not started · 🧪 needs ver
 | M1  | Particle-cloud viewer (becomes the engine and the finale sandbox) | ✅ 2026-10-31 | Any orbital up to n = 7 can be rotated |
 | M2  | Story engine + caption system + audio engine + Ch 0 cold open | ✅ 2026-10-31 | Chapters and beats play, skip and resume; captions + Go-deeper drawer work; the audio engine plays placeholder cues |
 | M3  | Ch 1 — "The electron is a cloud" | ✅ 2026-11-01 | Measure mode builds up 1s; the P(r) peak at 1 a₀ is shown |
-| M4  | Ch 2 — n: climbing the ladder | ⬜ | Two-photon 1s→2s→3s works; a spectrum barcode builds from emissions |
+| M4  | Ch 2 — n: climbing the ladder | ✅ 2026-11-01 | Two-photon 1s→2s→3s works; a spectrum barcode builds from emissions |
 | M5  | Ch 3 — l: light carries a twist | ⬜ | Lyman-α 1s→2p; Δl = ±1 is enforced; the n = 3 ladder climbs s→p→d |
 | M6  | Ch 4 — m: a magnetic field gives space a direction | ⬜ | Zeeman fan-out; current swirl; σ± photons select Δm |
 | M7  | Ch 5 — Finale + sandbox | ⬜ | The circular Rydberg state becomes the Bohr orbit; free play opens |
@@ -212,16 +212,16 @@ The chord can anchor the main theme's harmony.
 | Camera director: scripted shots with springs, user can still orbit | Ch 0 | ✅ |
 | Bloom / glow post-processing | Ch 0 | ✅ |
 | Measure mode + live P(r) histogram | Ch 1 | ✅ |
-| Superposition transitions (replace the visual morph) | Ch 2 | ⬜ |
-| Photons as objects: fire, miss, absorb, emit; colour from wavelength; two-photon | Ch 2 | ⬜ |
-| Energy ladder + spectrum barcode | Ch 2 | ⬜ |
+| Superposition transitions (replace the visual morph) | Ch 2 | ✅ |
+| Photons as objects: fire, miss, absorb, emit; colour from wavelength; two-photon | Ch 2 | ✅ |
+| Energy ladder + spectrum barcode | Ch 2 | ✅ |
 | True-scale toggle | Ch 2 | ⬜ |
 | Selection-rule engine (Δl = ±1, Δm ∈ {0, ±1}, polarization) | Ch 3 | ⬜ |
 | Node surfaces (radial spheres, angular planes/cones) + node counter | Ch 3 | ⬜ |
 | Complex m-basis, phase colouring, probability-current swirl | Ch 4 | ⬜ |
 | Magnetic field lines + Zeeman energy fan | Ch 4 | ⬜ |
 | Circular-state preset to n = 30 (needs a sampler check at large n) | Ch 5 | ⬜ |
-| Web Worker sampling (no hitches during transitions) | Ch 2 | ⬜ |
+| Web Worker sampling (no hitches during transitions) | Ch 2 | ✅ |
 | Caption system: two-layer captions, "Go deeper" drawer (KaTeX), glossary chips, idle nudges | Ch 0 | ✅ |
 | Accessibility: captions always on, reduced-motion mode, keyboard path, works muted | M9 | ⬜ |
 | Phone compatibility pass: layout, touch, particle budget (~100k), drawer as bottom sheet | M9 | ⬜ |
@@ -267,6 +267,40 @@ The chord can anchor the main theme's harmony.
 ---
 
 ## Done so far
+
+### M4 — Chapter 2: "Climbing the ladder" (n) ✅
+
+| Beat | What happens | Interaction |
+|---|---|---|
+| ladder | Energy ladder slides in (to scale, reduced mass) | Continue |
+| tune | Tunable UV laser (185–300 nm), resonance meter, snapping. Misses pass straight through; 243.13 nm → two counter-propagating photons → coherent 1s→2s transition | Tune + Fire (fallback: "Tune it for me") |
+| level-2 | 2s cloud with its node ring at exactly 2 a₀ | Continue |
+| why-two | Sets up Ch 3 (one photon can't do Δl = 0) | Continue |
+| relax | 2s → 1s by two-photon emission (two dim photons sharing 10.2 eV) | Automatic |
+| tune-3 | 205.14 nm → 3s. Other ns lines are real resonances too: the atom absorbs, falls back, and the prompt hints | Tune + Fire |
+| size | 3s with a "level 1 size" ring: 9× wider on average | Continue |
+| cascade | 3s → 2p (656.47 nm, red) → 1s (121.57 nm, UV) by quantum jumps; the spectrum barcode fills | Let go |
+| spectrum | Hydrogen's fingerprint; optional free play (4s–7s cascades fill in the Balmer set by the true branching ratios) | Continue |
+
+| Feature | File | Notes |
+|---|---|---|
+| Spectroscopy: reduced-mass levels, line and two-photon wavelengths, dipole integrals, Einstein A, branching, lifetimes, colours | `web/spectroscopy.js` | Matches measured values: Hα 656.47, Lyα 121.57, 1S–2S 243.13 nm; τ(2p) 1.596 ns, τ(3s) 158 ns, τ(3p) 5.27 ns, τ(3d) 15.5 ns |
+| Exact superposition rendering by importance weights (w = \|Ψ(t)\|²/q, q = ½(ψa² + ψb²), w ≤ 4) | `web/mixture.js`, `web/scene/superposition.js` | Tested: normalisation, breathing ⟨r⟩(t) with interference, dipole ⟨z⟩(t) sloshing, no sloshing when incoherent |
+| Transitions: coherent (laser, Rabi half-cycle + quantum beat, slowed ~10¹⁵×) vs incoherent quantum jumps (spontaneous emission) | `web/scene/transition.js` | |
+| Background sampling worker with main-thread fallback | `web/sample-worker.js`, `web/scene/sampling.js` | No hitch on transitions |
+| Photons as wave packets with labels, a laser beam, flashes | `web/scene/photons.js` | Two beams from both sides (Doppler-free geometry) |
+| Lab: tuning, resonance meter + snapping, firing, decay cascades | `web/story/lab.js` | Resonance tolerance ±0.25 nm (unit-tested) |
+| Energy ladder (SVG): springy dot, two-photon and emission arrows, lifetime readout | `web/story/ladder.js` | |
+| Spectrum barcode (log λ, UV → IR, visible rainbow) | `web/story/spectrum.js` | |
+| Sounds: laser hum (pitch tracks λ, opens near resonance), coherent "beat" tone, absorb, emit (pitch = scaled line frequency), snap, miss whoosh, jump | `web/audio/cues.js` | Engine gained `loop()` for continuous sounds |
+| Go deeper: energy levels, two-photon physics (Doppler-free, 15-digit 1S–2S), decay and quantum jumps, size ∝ n², Rydberg formula and series | `web/story/deeper.js` | |
+| Framework: beats declare `uses: [...]` tools (others auto-release), `setPrompt()`, async fallbacks, caption-height tracking | `web/story/ui.js` | |
+| Tests: 8 new (wavelengths, dipole integral, A coefficients and lifetimes, branching, colours, superposition ×2, resonance); end-to-end Ch 2 run on desktop + phone | `tests/` | 30 unit tests total |
+
+**M4 follow-ups**
+- 🧪 Real-device check of the transition "breathing" speed (beat ≈ 0.28 Hz per eV of gap) and of how the laser hum and beat tone sound.
+- The 3s/4s nodes beyond 2s aren't marked with rings (only the 2s node is); consider adding for 3s.
+- The 1S–2S line shows 243.14 nm because the model omits the Lamb shift and fine structure (0.005 nm); the drawer quotes the measured 243.13 nm.
 
 ### M3 — Chapter 1: "The electron is a cloud" ✅
 
@@ -371,6 +405,7 @@ The chord can anchor the main theme's harmony.
 ---
 
 ## Changelog
+- **2026-11-01:** **M4 complete** (branch `m4-chapter2`). Chapter 2: tunable laser, two-photon absorption with exact superposition rendering, energy ladder, quantum-jump cascades with true branching ratios, emission spectrum. Added the spectroscopy module, background sampling worker, photon system, and new sounds and content. 30 unit tests.
 - **2026-11-01:** Project moved into git and pushed to GitHub: https://github.com/lkalman1/hydrogen-orbitals (`main`).
 - **2026-11-01:** **M3 complete.** Chapter 1 (six beats): tap and hold to measure, a live histogram converging to the exact P(r), the Bohr-radius ring, and drag-to-confirm stationarity. Added the measurement shader mode, measuring tool, chart, marker, stats module, new sounds, deeper and glossary content, and tests.
 - **2026-10-31:** **M2 complete.** Story engine, two-layer caption system with the Go-deeper drawer and glossary, audio engine with Balmer-chord placeholder cues, bloom, scripted camera, the Ch 0 cold open, placeholder Ch 1–5, and the sandbox on a shared stage. `app.js` was split into `main.js`, `scene/`, `story/`, `audio/` and `sandbox.js`. Tests: 18 unit tests plus an end-to-end browser run.

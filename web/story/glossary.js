@@ -12,5 +12,8 @@ export const GLOSSARY = {
   probability: "How likely something is, from 0 (never) to 1 (certain).",
   measurement: "Checking where the electron is. Each measurement gives one exact spot, and you can't predict which one.",
   "bohr radius": "The electron's most likely distance from the proton in hydrogen's lowest state: about 0.053 nanometres. Named after the physicist Niels Bohr.",
+  wavelength: "The distance between one crest of a light wave and the next. It sets the colour: red light is about 650 nanometres, violet about 400.",
+  laser: "A light source that produces a single, very pure colour, which can be tuned very precisely.",
+  spectrum: "The set of colours (wavelengths) of light something gives off. Each kind of atom has its own pattern of lines, like a barcode.",
   "stationary state": "A state of an atom that never changes over time, as long as nothing disturbs it. Its cloud stays perfectly still.",
 };

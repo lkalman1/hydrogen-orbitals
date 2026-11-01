@@ -53,6 +53,8 @@ export class StoryUI {
 
     this.#buildProgress();
     this.#bindControls();
+    // the caption box changes height as prompts appear: keep panels anchored above it
+    new ResizeObserver(() => { if (this.visible) this.stage.resize(); }).observe($("caption-box"));
     story.onEnter((info) => this.#enter(info));
   }
 
@@ -72,9 +74,15 @@ export class StoryUI {
   #freeStrip() {
     let top = $("topbar").getBoundingClientRect().bottom;
     let bottom = $("caption-box").getBoundingClientRect().top;
-    const measureBtn = $("measure-btn"), chart = $("rchart");
-    if (!measureBtn.hidden) bottom = Math.min(bottom, measureBtn.getBoundingClientRect().top - 8);
-    if (!chart.hidden && window.innerWidth <= 720) top = Math.max(top, chart.getBoundingClientRect().bottom);
+    const phone = window.innerWidth <= 720;
+    document.documentElement.style.setProperty("--caption-h", `${window.innerHeight - bottom}px`);
+    for (const id of ["measure-btn", "release-btn"]) {
+      const el = $(id);
+      if (!el.hidden) bottom = Math.min(bottom, el.getBoundingClientRect().top - 8);
+    }
+    if (phone && !$("laser").hidden) bottom = Math.min(bottom, $("laser").getBoundingClientRect().top - 8);
+    if (!$("spectrum").hidden) top = Math.max(top, $("spectrum").getBoundingClientRect().bottom);
+    if (phone && !$("rchart").hidden) top = Math.max(top, $("rchart").getBoundingClientRect().bottom);
     return { top, bottom: bottom > top + 120 ? bottom : window.innerHeight };
   }
 
@@ -102,6 +110,7 @@ export class StoryUI {
     this.currentChapter = chapter;
     this.actionReady = false;
     this.completed = false;
+    this.fallbackRunning = false;
     const token = this.beatToken;
 
     history.replaceState(null, "", `#${chapterDef.id}`);
@@ -126,7 +135,7 @@ export class StoryUI {
       },
     };
     this.ctx = ctx;
-    if (!def.usesMeasure) this.tools.measure?.release();
+    for (const [name, tool] of Object.entries(this.tools)) if (!def.uses?.includes(name)) tool.release?.();
     this.cleanup = def.enter?.(ctx, { direction }) ?? null;
     this.stage.resize(); // the beat may have shown or hidden layout elements
 
@@ -166,11 +175,23 @@ export class StoryUI {
     if (this.story.next() === "end") this.onSandbox?.();
   }
 
-  /** Accessible alternative to a scene interaction: do it for the user, then continue. */
+  /**
+   * Accessible alternative to a scene interaction: do it for the user, then continue.
+   * onFallback may return "wait" when its action completes the beat itself.
+   */
   #fallback() {
-    if (!this.ctx || this.completed) return;
-    this.story.current.onFallback?.(this.ctx);
+    if (!this.ctx || this.completed || this.fallbackRunning) return;
+    const result = this.story.current.onFallback?.(this.ctx);
+    if (result === "wait") { this.fallbackRunning = true; $("fallback-btn").hidden = true; return; }
     this.ctx.complete();
+  }
+
+  /** Replace the prompt under the caption (e.g. a hint after a wrong try). */
+  setPrompt(text) {
+    const prompt = $("prompt");
+    prompt.textContent = text;
+    prompt.hidden = !text;
+    prompt.classList.remove("nudge", "flash"); void prompt.offsetWidth; prompt.classList.add("flash");
   }
 
   back() {

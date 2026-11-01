@@ -59,12 +59,41 @@
   </section>
   <div id="measure-tag" hidden></div>
 
+  <section id="spectrum" class="panel" hidden aria-label="Spectrum of light emitted by the atom">
+    <p class="spectrum-title">Light given off by the atom <span>(wavelength, nm)</span></p>
+    <canvas aria-hidden="true"></canvas>
+  </section>
+
+  <section id="ladder" class="panel" hidden aria-label="Energy ladder">
+    <p class="ladder-title">Energy levels</p>
+    <div class="ladder-body"></div>
+    <p id="ladder-foot"></p>
+  </section>
+
+  <section id="laser" class="panel" hidden aria-label="Tunable laser">
+    <p class="laser-title">Tunable UV laser <span>two beams, from both sides</span></p>
+    <div class="laser-read">
+      <span id="laser-swatch" aria-hidden="true"></span>
+      <b id="laser-readout">270.00 nm</b>
+      <small id="laser-region"></small>
+    </div>
+    <div class="laser-tune">
+      <button id="laser-down" class="btn icon-btn" type="button" aria-label="Shorter wavelength">−</button>
+      <input id="laser-nm" type="range" min="185" max="300" step="0.01" value="270" aria-label="Laser wavelength in nanometres">
+      <button id="laser-up" class="btn icon-btn" type="button" aria-label="Longer wavelength">+</button>
+    </div>
+    <div class="laser-meter" aria-hidden="true"><i id="laser-meter"></i></div>
+    <p class="laser-meter-lbl"><span>how close to a line</span><span class="on-line">on a line!</span></p>
+    <button id="fire-btn" class="btn btn-primary" type="button">Fire</button>
+  </section>
+
   <section id="caption-box" class="panel" aria-live="polite">
     <button id="measure-btn" type="button" hidden>
       <span class="dot" aria-hidden="true"></span>
       <span class="label">Measure</span>
       <span class="rate" aria-hidden="true"></span>
     </button>
+    <button id="release-btn" class="float-btn" type="button" hidden>Let go</button>
     <p id="caption"></p>
     <div id="caption-actions">
       <button id="back-btn" class="btn icon-btn" type="button" aria-label="Back">‹</button>

@@ -163,15 +163,16 @@ export class OrbitalCloud {
   /**
    * Move to state (n, l, m).
    * mode: "morph" (from current positions), "instant", or "condense" (fall in from a wide spiral).
+   * sample: precomputed { sph, sign } for this cloud's ranks (e.g. from the worker).
    */
-  setState(n, l, m, { mode = "morph", duration, spread } = {}) {
+  setState(n, l, m, { mode = "morph", duration, spread, sample } = {}) {
     if (!isValid(n, l, m)) return false;
     const now = performance.now() / 1000;
     const start = this.target && mode === "morph" ? this.currentSpherical(now) : null;
 
     this.state = { n, l, m };
     this.tables = buildTables(n, l, m);
-    this.target = sampleState(this.tables, this.ranks);
+    this.target = sample ?? sampleState(this.tables, this.ranks);
 
     const { aFrom, aTo, aSign } = this.points.geometry.attributes;
     aTo.array.set(this.target.sph);

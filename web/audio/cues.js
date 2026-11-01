@@ -153,6 +153,13 @@ const pulse = (root) => (ctx, out, t, { beatSeconds }) => {
 
 const theme = (root) => [drone(root), pad(root), shimmer(root), pulse(root)];
 
+/** Pitch for energy level n: proportional to its height above the ground state
+ * (1 − 1/n²), so climbing the ladder climbs a real "hydrogen scale". */
+export const levelHz = (n) => (n === 1 ? 110 : 220 * (1 - 1 / (n * n)) / 0.75);
+/** Pitch for a spectral line: its optical frequency scaled so Hα (656.47 nm) = 220 Hz. */
+export const lineHz = (nm) => 220 * (656.47 / nm);
+const laserHz = (nm) => 70 * 2 ** ((300 - nm) / 45);
+
 // ------------------------------------------------------------ cue sheet
 
 export const CUES = {
@@ -175,7 +182,113 @@ export const CUES = {
       [0, 2].forEach((i, k) => bell(ctx, out, t + k * beatSeconds / 2, ROOT * 4 * BALMER[i], { dur: 2.5, level: 0.1 }));
     },
   },
+  loops: {
+    // the laser: a buzzy tone that tracks wavelength and opens up near resonance
+    "laser-hum": (ctx, out, t) => {
+      const saw = ctx.createOscillator(), sine = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+      saw.type = "sawtooth";
+      lp.type = "lowpass"; lp.Q.value = 6; lp.frequency.value = 400;
+      g.gain.value = 0;
+      saw.connect(lp); sine.connect(lp); lp.connect(g).connect(out);
+      saw.start(t); sine.start(t);
+      return {
+        set({ nm, rho = 0 }) {
+          const now = ctx.currentTime;
+          saw.frequency.setTargetAtTime(laserHz(nm), now, 0.05);
+          sine.frequency.setTargetAtTime(laserHz(nm) * 2.003, now, 0.05);
+          lp.frequency.setTargetAtTime(300 + 2600 * rho, now, 0.08);
+          g.gain.setTargetAtTime(0.02 + 0.06 * rho, now, 0.1);
+        },
+        stop() {
+          const now = ctx.currentTime;
+          g.gain.setTargetAtTime(0, now, 0.12);
+          saw.stop(now + 1); sine.stop(now + 1);
+        },
+      };
+    },
+    // a coherent transition: the two levels' pitches cross-fade, pulsing at the beat rate
+    "beat": (ctx, out, t, { fromN = 1, toN = 2, seconds = 2.5, beatHz = 2.5 } = {}) => {
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, t);
+      master.gain.exponentialRampToValueAtTime(0.09, t + 0.3);
+      const trem = ctx.createGain(); trem.gain.value = 0.5;
+      const lfo = ctx.createOscillator(), lfoGain = ctx.createGain();
+      lfo.frequency.value = beatHz; lfoGain.gain.value = 0.5;
+      lfo.connect(lfoGain).connect(trem.gain);
+      trem.connect(master).connect(out);
+      const tone = (f, from, to) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "triangle"; o.frequency.value = f;
+        g.gain.setValueAtTime(from, t);
+        g.gain.linearRampToValueAtTime(to, t + seconds);
+        o.connect(g).connect(trem);
+        o.start(t);
+        return o;
+      };
+      const oscs = [tone(levelHz(fromN) * 2, 1, 0), tone(levelHz(toN) * 2, 0, 1), lfo];
+      lfo.start(t);
+      return {
+        set() {},
+        stop() {
+          const now = ctx.currentTime;
+          master.gain.setTargetAtTime(0.0001, now, 0.25);
+          for (const o of oscs) o.stop(now + 1.5);
+        },
+      };
+    },
+  },
   sfx: {
+    "photon-fire": (ctx, out, t, { nm = 243 } = {}) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(laserHz(nm) * 16, t);
+      o.frequency.exponentialRampToValueAtTime(laserHz(nm) * 3, t + 0.18);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      o.connect(g).connect(out);
+      o.start(t); o.stop(t + 0.3);
+    },
+    // a missed photon whooshes through, left to right
+    "photon-miss": (ctx, out, t) => {
+      const src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+      const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain();
+      src.buffer = noiseBuffer(ctx, 0.8);
+      bp.type = "bandpass"; bp.Q.value = 3;
+      bp.frequency.setValueAtTime(2400, t);
+      bp.frequency.exponentialRampToValueAtTime(700, t + 0.6);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.12, t + 0.15);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.65);
+      if (pan.pan) { pan.pan.setValueAtTime(-0.8, t); pan.pan.linearRampToValueAtTime(0.8, t + 0.6); }
+      src.connect(bp).connect(g).connect(pan).connect(out);
+      src.start(t);
+    },
+    // absorption: a soft impact, then the new level's pitch rings out
+    "absorb": (ctx, out, t, { n = 2 } = {}) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(90, t);
+      o.frequency.exponentialRampToValueAtTime(40, t + 0.35);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.35, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.connect(g).connect(out);
+      o.start(t); o.stop(t + 0.55);
+      bell(ctx, out, t + 0.02, levelHz(n) * 4, { dur: 3, level: 0.12 });
+      bell(ctx, out, t + 0.12, levelHz(n) * 2, { dur: 3.5, level: 0.08, ratio: 2, index: 1 });
+    },
+    // emission: a bell at the line's (scaled) optical frequency
+    "emit": (ctx, out, t, { nm = 656.47 } = {}) => {
+      bell(ctx, out, t, lineHz(nm), { dur: 3, level: 0.14 });
+      bell(ctx, out, t, lineHz(nm) * 2, { dur: 1.5, level: 0.04, ratio: 2, index: 0.5 });
+    },
+    // the slider locks onto a line
+    "snap": (ctx, out, t) => {
+      bell(ctx, out, t, ROOT * 16, { dur: 0.3, level: 0.05, ratio: 2, index: 0.4 });
+      bell(ctx, out, t + 0.05, ROOT * 16 * BALMER[2], { dur: 0.6, level: 0.05, ratio: 2, index: 0.4 });
+    },
+    // a quantum jump with no single photon line (2s two-photon decay)
+    "jump": (ctx, out, t) => bell(ctx, out, t, ROOT * 8, { dur: 0.8, level: 0.06, ratio: 1.41, index: 1.5 }),
     "ui-tick": (ctx, out, t) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.frequency.setValueAtTime(1800, t);

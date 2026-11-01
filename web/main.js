@@ -11,6 +11,9 @@ import { CHAPTERS } from "./story/chapters.js";
 import { StoryUI } from "./story/ui.js";
 import { Sandbox } from "./sandbox.js";
 import { Measurement } from "./story/measure.js";
+import { Sampling } from "./scene/sampling.js";
+import { Transitions } from "./scene/transition.js";
+import { Lab } from "./story/lab.js";
 
 const $ = (id) => document.getElementById(id);
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -25,13 +28,16 @@ const stage = createStage($("scene"), { reducedMotion, particles: phone ? 100000
 const audio = new AudioEngine(CUES, { tempo: TEMPO, beatsPerBar: BEATS_PER_BAR });
 const story = new Story(CHAPTERS, { storage: safeStorage() });
 
+const transitions = new Transitions(stage, new Sampling());
 const measure = new Measurement({ stage, audio });
-const ui = new StoryUI(story, { stage, audio, tools: { measure }, reducedMotion, onSandbox: () => enterSandbox() });
+const lab = new Lab({ stage, audio, transitions });
+const tools = { measure, lab };
+const ui = new StoryUI(story, { stage, audio, tools, reducedMotion, onSandbox: () => enterSandbox() });
 const sandbox = new Sandbox({ stage, audio, onJourney: () => enterJourney() });
 
 function enterSandbox(orbital, opts) {
   ui.hide();
-  measure.release();
+  for (const tool of Object.values(tools)) tool.release();
   sandbox.show(orbital, opts);
 }
 
@@ -90,4 +96,4 @@ window.addEventListener("hashchange", () => {
 route(location.hash);
 
 // Hook for automated checks (tests/screenshot.mjs).
-window.__hydrogen = { stage, audio, story, ui, sandbox, measure, ready: true };
+window.__hydrogen = { stage, audio, story, ui, sandbox, measure, lab, transitions, ready: true };

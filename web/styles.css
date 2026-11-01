@@ -144,6 +144,61 @@ button { font: inherit; color: inherit; }
 .rchart-readout { position: absolute; top: 10px; right: 12px; margin: 0; font-size: 11px; color: var(--ink); background: var(--panel-solid);
   padding: 2px 6px; border-radius: 4px; border: 1px solid var(--panel-border); font-variant-numeric: tabular-nums; }
 
+/* ---------------------------------------------------------------- story: lab (Ch 2) */
+#spectrum { left: 50%; top: 58px; transform: translateX(-50%); width: min(640px, calc(100vw - 32px)); padding: 8px 12px 6px; z-index: 12; }
+#spectrum.on { animation: drop-in .6s var(--ease-out) both; }
+@keyframes drop-in { from { opacity: 0; transform: translate(-50%, -10px); } }
+.spectrum-title, .ladder-title, .laser-title { margin: 0 0 4px; font-weight: 600; font-size: 13px; }
+.spectrum-title span, .laser-title span { color: var(--muted); font-weight: 400; }
+#spectrum canvas { display: block; width: 100%; height: 64px; }
+
+#ladder { left: 16px; top: 50%; transform: translateY(-50%); width: 250px; padding: 12px 12px 10px; z-index: 12; }
+#ladder.on { animation: slide-in .6s var(--ease-out) both; }
+#ladder svg { display: block; width: 100%; height: auto; overflow: visible; }
+#ladder .rung { stroke: rgba(200,210,230,.45); stroke-width: 1.5; }
+#ladder .rung.free { stroke-dasharray: 4 4; stroke: rgba(200,210,230,.25); }
+#ladder .rung-g.near .rung { stroke: var(--laser, var(--accent)); stroke-width: 3; filter: drop-shadow(0 0 6px var(--laser, var(--accent))); }
+#ladder .lbl { fill: var(--muted); font: 10px Inter, system-ui, sans-serif; }
+#ladder .lbl.n { fill: var(--ink-2); font-size: 11px; }
+#ladder .lbl.small { font-size: 9px; }
+#ladder .end, #ladder .end-anchor { text-anchor: end; }
+#ladder .dot { fill: var(--warm); filter: drop-shadow(0 0 6px rgba(255,217,184,.8)); }
+#ladder .dot-lbl { fill: var(--warm); font-weight: 600; font-size: 11px; }
+#ladder .arrow { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#ladder .arrow-lbl { font-size: 10px; }
+#ladder g.old { opacity: 0; transition: opacity 2s; }
+#ladder-foot { margin: 6px 0 0; color: var(--ink-2); font-size: 11px; min-height: 2.6em; }
+
+#laser { right: 16px; top: 50%; transform: translateY(-50%); width: 290px; padding: 14px; z-index: 12; --laser: var(--accent); }
+#laser.on { animation: slide-in-r .6s var(--ease-out) both; }
+@keyframes slide-in-r { from { opacity: 0; transform: translate(16px, -50%); } }
+#laser.shake { animation: shake .4s ease; }
+@keyframes shake { 20%, 60% { transform: translate(-6px, -50%); } 40%, 80% { transform: translate(6px, -50%); } }
+.laser-read { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; margin: 8px 0; }
+#laser-swatch { width: 20px; height: 20px; border-radius: 50%; background: var(--laser); box-shadow: 0 0 14px var(--laser); flex: none; }
+#laser-readout { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+#laser-region { color: var(--muted); font-size: 12px; flex-basis: 100%; padding-left: 30px; }
+#laser.snapped #laser-readout { animation: pop .45s var(--spring); }
+.laser-tune { display: flex; align-items: center; gap: 8px; }
+.laser-tune .icon-btn { width: 30px; height: 30px; flex: none; }
+#laser-nm { flex: 1; accent-color: var(--laser); min-width: 0; }
+.laser-meter { height: 8px; border-radius: 4px; background: rgba(255,255,255,.06); margin: 12px 0 4px; overflow: hidden; }
+#laser-meter { display: block; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,.2), var(--laser)); transform-origin: left; transform: scaleX(0); transition: transform .1s; }
+.laser-meter-lbl { margin: 0 0 12px; display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
+.laser-meter-lbl .on-line { color: var(--laser); font-weight: 600; opacity: 0; transition: opacity .2s; }
+#laser.resonant .on-line { opacity: 1; }
+#laser.resonant .laser-meter { box-shadow: 0 0 14px var(--laser); }
+#fire-btn { width: 100%; font-size: 16px; padding: 10px; }
+#laser.resonant #fire-btn { animation: glow 1.4s ease-in-out infinite; }
+
+.float-btn { position: absolute; left: 50%; top: -70px; transform: translateX(-50%); padding: 12px 26px; border-radius: 999px;
+  border: 1px solid rgba(255,217,184,.4); background: rgba(14,18,28,.85); color: var(--ink); font-weight: 600; font-size: 15px; cursor: pointer;
+  animation: pop .5s var(--spring) both; transition: transform .12s var(--spring); }
+.float-btn:hover { border-color: var(--warm); box-shadow: 0 0 24px rgba(255,217,184,.3); }
+.float-btn:active { transform: translateX(-50%) scale(.94); }
+#prompt.flash { animation: prompt-flash .8s ease; }
+@keyframes prompt-flash { 0% { color: #fff; } 100% { color: var(--warm); } }
+
 /* ---------------------------------------------------------------- story: drawer */
 #drawer { top: 64px; right: 14px; bottom: 18px; width: min(430px, calc(100vw - 28px)); z-index: 25; padding: 18px 20px;
   overflow-y: auto; background: var(--panel-solid); transform: translateX(110%); transition: transform .35s var(--ease-out); }
@@ -231,6 +286,23 @@ kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--panel-border);
   #rchart canvas { height: 64px; }
   .rchart-title, .rchart-key { display: none; }
   #measure-btn { top: -62px; padding: 10px 18px 10px 12px; }
+  .float-btn { top: -60px; }
+  #spectrum { top: 56px; left: 10px; right: 10px; width: auto; transform: none; padding: 4px 8px; }
+  #spectrum.on { animation: fade .4s ease both; }
+  .spectrum-title { display: none; }
+  #spectrum canvas { height: 46px; }
+  #ladder { left: 8px; top: 124px; width: 112px; transform: none; padding: 6px; }
+  #ladder.on { animation: fade .4s ease both; }
+  .ladder-title, #ladder-foot, #ladder .lbl:not(.n):not(.dot-lbl), #ladder .arrow-lbl { display: none; }
+  #laser { left: 10px; right: 10px; top: auto; bottom: calc(var(--caption-h, 140px) + 12px); width: auto; transform: none; padding: 10px 12px; }
+  #laser.on { animation: fade .4s ease both; }
+  #laser.shake { animation: none; }
+  .laser-title, .laser-meter-lbl { display: none; }
+  .laser-read { margin: 0 0 6px; }
+  #laser-readout { font-size: 20px; }
+  #laser-region { flex-basis: auto; padding-left: 0; }
+  .laser-meter { margin: 8px 0; }
+  #fire-btn { padding: 8px; }
   #drawer { top: auto; left: 10px; right: 10px; bottom: 10px; width: auto; height: 62vh; transform: translateY(110%); }
   #drawer.open { transform: none; }
   #info { padding: 10px 12px; min-width: 0; top: 60px; }

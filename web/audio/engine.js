@@ -175,6 +175,16 @@ export class AudioEngine {
     fn(this.ctx, out, this.ctx.currentTime + (opts.delay ?? 0), opts);
   }
 
+  /**
+   * Start a continuous sound (cues.loops[id]). Returns a handle { set(params), stop() },
+   * or null before audio is unlocked.
+   */
+  loop(id, opts = {}) {
+    if (!this.ctx) return null;
+    const fn = this.cues.loops?.[id];
+    return fn ? fn(this.ctx, opts.bus === "ui" ? this.uiBus : this.sfxBus, this.ctx.currentTime, opts) : null;
+  }
+
   /** Stinger on the next bar line, with the music ducked under it. */
   stinger(id, { duck = -6, seconds = 3 } = {}) {
     if (!this.ctx) return;

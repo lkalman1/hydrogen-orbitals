@@ -24,6 +24,27 @@ const preview = (n, l, m) => (ctx, { direction }) => {
   stage.rig.storyZoom = 1;
 };
 
+// A tuning beat: laser on, complete when level `target` is reached; other levels
+// are real resonances too, so the atom absorbs, then falls back, and we hint.
+const tuneFor = (target) => (ctx, { direction }) => {
+  const { stage, lab, ui } = ctx;
+  stage.showProton(true);
+  stage.showAxes(false);
+  if (lab.atom.n !== 1 || lab.busy || direction !== "forward") lab.reset();
+  lab.ladder.show();
+  lab.enableLaser({ start: target === 2 ? 270 : lab.nm });
+  let misses = 0;
+  return lab.on((e) => {
+    if (e.type === "absorbed" && e.n === target) ctx.complete();
+    else if (e.type === "absorbed") {
+      ui.setPrompt(`That was level ${e.n}! It will fall back down; then try ${e.n > target ? "a longer" : "a shorter"} wavelength.`);
+      setTimeout(() => lab.cascade(), 900);
+    } else if (e.type === "miss" && ++misses === 3) {
+      ui.setPrompt("Missed: the atom ignores the wrong colours. Watch the meter as you slide.");
+    }
+  });
+};
+
 const comingSoon = (text) => ({
   id: "coming-soon",
   caption: `This chapter is still being built. ${text}`,
@@ -143,7 +164,7 @@ export const CHAPTERS = [
     beats: [
       {
         id: "question",
-        usesMeasure: true,
+        uses: ["measure"],
         caption: "Where exactly is the electron right now? Let's find out by making a [[measurement]].",
         prompt: "Tap Measure a few times (or tap the atom).",
         nudge: "Press the Measure button above this box.",
@@ -166,7 +187,7 @@ export const CHAPTERS = [
       },
       {
         id: "random",
-        usesMeasure: true,
+        uses: ["measure"],
         caption: "Each measurement finds the electron in one spot, but a different spot every time. The result is random.",
         wait: { type: "continue", label: "Then where is it?" },
         deeper: "randomness",
@@ -181,7 +202,7 @@ export const CHAPTERS = [
       },
       {
         id: "hold",
-        usesMeasure: true,
+        uses: ["measure"],
         caption: "Hold Measure down to make thousands of measurements, and watch where they land.",
         prompt: "Press and hold Measure.",
         nudge: "Keep holding: it speeds up the longer you hold.",
@@ -202,7 +223,7 @@ export const CHAPTERS = [
       },
       {
         id: "pattern",
-        usesMeasure: true,
+        uses: ["measure"],
         caption: "A pattern appears! This cloud is the electron's [[orbital]]: a map of where it's likely to be found.",
         wait: { type: "continue", label: "Continue", minSeconds: 1.8 },
         deeper: "orbital",
@@ -218,7 +239,7 @@ export const CHAPTERS = [
       },
       {
         id: "distance",
-        usesMeasure: true,
+        uses: ["measure"],
         caption: "The most common distance is about 0.05 nanometres: the [[bohr radius|Bohr radius]]. A metre is 19 billion of them!",
         wait: { type: "continue", label: "Continue" },
         deeper: "bohr-radius",
@@ -265,7 +286,150 @@ export const CHAPTERS = [
     title: "Climbing the ladder",
     minutes: 3.5,
     music: "MUS-02",
-    beats: [{ ...comingSoon("Here you'll tune a laser to lift the electron to higher energy levels."), enter: preview(3, 0, 0) }],
+    beats: [
+      {
+        id: "ladder",
+        uses: ["lab"],
+        caption: "An atom can only hold certain amounts of energy, like the rungs of a ladder. These are its [[energy level|energy levels]].",
+        wait: { type: "continue", label: "Let's climb" },
+        deeper: "energy-levels",
+        music: { layers: 1 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          stage.showAxes(false);
+          lab.reset();
+          lab.disableLaser();
+          lab.ladder.show();
+          stage.rig.flyTo({ zoom: 1.1, pitch: 0.3 }, 1.5);
+        },
+      },
+      {
+        id: "tune",
+        uses: ["lab"],
+        caption: "Light can lift the electron up the ladder, but only light of exactly the right colour. Tune the laser and fire!",
+        prompt: "Drag the slider, then press Fire. The meter glows near the right colour.",
+        nudge: "Hint: try around 243 nm.",
+        wait: { type: "scene", label: "Tune it for me" },
+        deeper: "two-photon",
+        music: { layers: 2 },
+        enter: tuneFor(2),
+        onFallback({ lab }) { lab.autoTune(2); return "wait"; },
+      },
+      {
+        id: "level-2",
+        uses: ["lab"],
+        caption: "Two photons lifted the electron to level 2. The cloud grew, and an empty shell, a [[node]], opened inside it.",
+        wait: { type: "continue", label: "Continue" },
+        deeper: "two-photon",
+        music: { layers: 2 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          if (lab.atom.n !== 2 || lab.busy) lab.reset({ n: 2, l: 0, m: 0 });
+          lab.disableLaser();
+          lab.ladder.show();
+          lab.nodeMarker.show(true);
+          return () => lab.nodeMarker.show(false);
+        },
+      },
+      {
+        id: "why-two",
+        uses: ["lab"],
+        caption: "Why two photons, not one? A single photon can't make this particular jump. Chapter 3 reveals why.",
+        wait: { type: "continue", label: "Continue" },
+        deeper: "two-photon",
+        music: { layers: 2 },
+        enter({ lab }) {
+          if (lab.atom.n !== 2 || lab.busy) lab.reset({ n: 2, l: 0, m: 0 });
+          lab.disableLaser();
+          lab.ladder.show();
+        },
+      },
+      {
+        id: "relax",
+        uses: ["lab"],
+        caption: "Left alone, the atom falls back down to level 1, giving its energy away as light.",
+        wait: { type: "scene", label: "Continue" },
+        deeper: "decay",
+        music: { layers: 2 },
+        enter(ctx) {
+          const { lab } = ctx;
+          if (lab.atom.n !== 2 || lab.busy) lab.reset({ n: 2, l: 0, m: 0 });
+          lab.disableLaser();
+          lab.ladder.show();
+          const off = lab.on((e) => { if (e.type === "ground") ctx.complete(); });
+          setTimeout(() => lab.cascade(), 600);
+          return off;
+        },
+        onFallback({ lab }) { lab.reset(); },
+      },
+      {
+        id: "tune-3",
+        uses: ["lab"],
+        caption: "Now find the colour that lifts the electron straight from level 1 to level 3.",
+        prompt: "Level 3 is higher, so each photon needs more energy: a shorter wavelength.",
+        nudge: "Hint: try around 205 nm.",
+        wait: { type: "scene", label: "Tune it for me" },
+        deeper: "two-photon",
+        music: { layers: 3 },
+        enter: tuneFor(3),
+        onFallback({ lab }) { lab.autoTune(3); return "wait"; },
+      },
+      {
+        id: "size",
+        uses: ["lab"],
+        caption: "Level 3 is bigger again, with two empty shells. On average it's nine times wider than level 1!",
+        wait: { type: "continue", label: "Continue" },
+        deeper: "size",
+        music: { layers: 3 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          if (lab.atom.n !== 3 || lab.busy) lab.reset({ n: 3, l: 0, m: 0 });
+          lab.disableLaser();
+          lab.ladder.show();
+          lab.sizeMarker.show(true);
+          stage.rig.flyTo({ zoom: 1, pitch: 0.2 }, 2);
+          return () => lab.sizeMarker.show(false);
+        },
+      },
+      {
+        id: "cascade",
+        uses: ["lab"],
+        caption: "Now let go, and watch the light the atom gives off on its way back down.",
+        prompt: "Press Let go.",
+        nudge: "The Let go button is just above this box.",
+        wait: { type: "scene", label: "Let it go" },
+        deeper: "decay",
+        music: { layers: 3 },
+        enter(ctx) {
+          const { lab } = ctx;
+          if (lab.atom.n !== 3 || lab.busy) lab.reset({ n: 3, l: 0, m: 0 });
+          lab.disableLaser();
+          lab.ladder.show();
+          lab.spectrum.reset();
+          lab.spectrum.show();
+          lab.showRelease(true);
+          const off = lab.on((e) => { if (e.type === "ground") ctx.complete(); });
+          return () => { off(); lab.showRelease(false); };
+        },
+        onFallback({ lab }) { lab.showRelease(false); lab.cascade(); return "wait"; },
+      },
+      {
+        id: "spectrum",
+        uses: ["lab"],
+        caption: "That red line is hydrogen's fingerprint. Astronomers see it glowing in gas clouds all across our galaxy.",
+        prompt: "Optional: fire other colours to collect more lines.",
+        wait: { type: "continue", label: "Next chapter", minSeconds: 1 },
+        deeper: "spectrum",
+        music: { layers: 4 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          if (lab.atom.n !== 1 || lab.busy) lab.reset();
+          lab.ladder.show();
+          lab.spectrum.show();
+          lab.enableLaser({ autoCascade: true });
+        },
+      },
+    ],
   },
   {
     id: "ch3",

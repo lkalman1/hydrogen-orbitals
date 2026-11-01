@@ -127,6 +127,78 @@ export const DEEPER = {
       <p>Change only comes from superpositions of different energies, which beat at
       <tex>(E_2-E_1)/\hbar</tex>. That is how atoms absorb and emit light, which is the next chapter.</p>`,
   },
+  "energy-levels": {
+    title: "Hydrogen's energy levels",
+    html: `
+      <tex display>E_n = -\frac{\mu}{m_e}\,\frac{13.6057\,\mathrm{eV}}{n^2} = -\frac{13.598\,\mathrm{eV}}{n^2}</tex>
+      <p>Energies are negative because the electron is <em>bound</em>: zero means it has just escaped.
+      The levels crowd together toward zero, and above it the electron is free (a continuum).</p>
+      <p><tex>\mu = m_e m_p/(m_e + m_p)</tex> is the reduced mass: the proton recoils slightly,
+      lowering every energy by 0.054%. All energies and wavelengths in this chapter include it;
+      without it, Hα would be predicted at 656.11 nm instead of the measured 656.47 nm.</p>
+      <p>The ladder on the left is drawn to scale. Only the energy depends on <tex>n</tex> in this
+      model, so 3s, 3p and 3d sit on the same rung.</p>`,
+  },
+  "two-photon": {
+    title: "Two-photon absorption: the 1S–2S line",
+    html: `
+      <p>Energy conservation: <tex>2\hbar\omega = E_2 - E_1 = 10.199\,\mathrm{eV}</tex>, so each photon has
+      <tex>\lambda = 243.13\,\mathrm{nm}</tex> (ultraviolet). For 1s → 3s: 205.14 nm.</p>
+      <ul>
+        <li><b>Selection rules.</b> One photon changes <tex>l</tex> by ±1, so 1s → 2s is forbidden for a single photon. Two photons can give <tex>\Delta l = 0</tex> or ±2.</li>
+        <li><b>Counter-propagating beams.</b> A moving atom sees one beam blue-shifted and the other red-shifted by the same amount; absorbing one photon from each cancels the first-order Doppler shift. That is why the photons arrive from both sides.</li>
+        <li><b>Precision.</b> The 2s state lives 0.12 s, so the line is only ~1.3 Hz wide. It has been measured as 2,466,061,413,187,035 Hz (±10 Hz), one of the most precise measurements in physics. Here the tolerance is ~0.25 nm, about 10<sup>13</sup> times more forgiving.</li>
+        <li><b>Detection.</b> In the lab, a third 243 nm photon ionizes the 2s atom, and the freed electron is counted.</li>
+      </ul>
+      <p><b>The animation.</b> While the laser drives the transition, the electron is in a genuine superposition
+      <tex>\Psi = c\,\psi_{1s}e^{-iE_1t/\hbar} + s\,\psi_{2s}e^{-iE_2t/\hbar}</tex>, whose density
+      <tex>c^2\psi_{1s}^2 + s^2\psi_{2s}^2 + 2cs\,\psi_{1s}\psi_{2s}\cos(\Delta E\,t/\hbar)</tex> "breathes"
+      in and out. Each particle is an exact sample of <tex>\tfrac12(\psi_{1s}^2 + \psi_{2s}^2)</tex>, drawn with
+      brightness <tex>|\Psi|^2/q</tex>, so the picture is exact at every instant. The real beat period is 0.4 fs:
+      it is slowed about 10<sup>15</sup> times.</p>`,
+  },
+  decay: {
+    title: "Spontaneous emission and quantum jumps",
+    html: `
+      <p>An excited state isn't truly stationary once the electromagnetic field is quantized: it decays,
+      emitting a photon, at the Einstein rate</p>
+      <tex display>A_{nl\to n'l'} = \frac{4\,\omega^3}{3c^3}\,\frac{\max(l,l')}{2l+1}\,\Big|\!\int R_{nl}R_{n'l'}\,r^3\,dr\Big|^2 \quad(\text{a.u.}).</tex>
+      <p>Computed here from the exact radial functions (and checked against tabulated values):</p>
+      <ul>
+        <li>2p: 1.60 ns · 3s: 158 ns · 3p: 5.27 ns · 3d: 15.5 ns</li>
+        <li>3p decays to 1s 88% of the time and to 2s 12% of the time; the path is chosen at random with these odds.</li>
+        <li>2s can't decay by one photon. It emits <em>two</em> photons sharing 10.2 eV (a continuous spectrum), with a lifetime of 0.12 s.</li>
+      </ul>
+      <p><b>The animation.</b> The moment of decay is random (exponential waiting times, slowed to about a second).
+      An undriven atom that decays doesn't oscillate coherently: averaged over the unknown emission time it is a
+      statistical <em>mixture</em> of the two states, so these jumps are drawn without the beat seen during
+      laser absorption.</p>`,
+  },
+  size: {
+    title: "How big is level n?",
+    html: `
+      <tex display>\langle r\rangle_{nl} = \tfrac12\left[3n^2 - l(l+1)\right] a_0</tex>
+      <p>For s states: 1.5, 6 and 13.5 <tex>a_0</tex> for n = 1, 2, 3, a ratio of 1 : 4 : 9. The cloud's size grows
+      like <tex>n^2</tex> while its binding energy shrinks like <tex>1/n^2</tex>.</p>
+      <p>Radial nodes are zeros of the Laguerre polynomial in <tex>R_{n0}</tex>: 2s at <tex>r = 2a_0</tex>; 3s at
+      <tex>r = (9 \mp 3\sqrt3)/2\,a_0</tex> = 1.90 and 7.10 <tex>a_0</tex>.</p>
+      <p>Highly excited "Rydberg atoms" with n ≈ 100 are about a micrometre across and are used today as
+      sensitive detectors and quantum-computing qubits.</p>`,
+  },
+  spectrum: {
+    title: "Hydrogen's spectrum",
+    html: `
+      <p>Every emitted wavelength satisfies the Rydberg formula</p>
+      <tex display>\frac1\lambda = R_\mathrm{H}\left(\frac1{n_1^2} - \frac1{n_2^2}\right), \qquad R_\mathrm{H} = 1.09678\times10^{7}\,\mathrm{m^{-1}}.</tex>
+      <ul>
+        <li><b>Lyman series</b> (down to n = 1): ultraviolet, from 121.6 nm.</li>
+        <li><b>Balmer series</b> (down to n = 2): visible, with Hα 656.5 (red), Hβ 486.3 (cyan), Hγ 434.2, Hδ 410.3 nm (violet). Johann Balmer found the pattern empirically in 1885; Bohr explained it in 1913.</li>
+        <li><b>Paschen series</b> (down to n = 3): infrared, from 1875 nm.</li>
+      </ul>
+      <p>Hot hydrogen clouds (H II regions, like the Orion Nebula) glow red from Hα. Comparing the lines of distant
+      galaxies with these lab values gives their redshifts, which is how cosmic expansion was measured.</p>
+      <p>Try the 4s, 5s and 6s lines (around 194.5, 189.9 and 187.6 nm): their cascades complete the Balmer set.</p>`,
+  },
   "coming-soon": {
     title: "Under construction",
     html: `<p>This chapter's interactive content arrives in a later milestone. The full design
