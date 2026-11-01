@@ -69,25 +69,22 @@ files (Ogg Opus + AAC), added in A2–A3.
 | `tests/screenshots/*.png` | End-to-end output | `npm run screenshot` | ❌ |
 | `node_modules/` | three.js + KaTeX for offline tests | `npm install` | ❌ |
 
-## Moving to Git
+## Git & GitHub
 
-From the `hydrogen/` folder:
+The project is on GitHub at **https://github.com/lkalman1/hydrogen-orbitals** (public), default branch `main`.
 
 ```bash
-git init -b main
-git add .                      # .gitignore already excludes generated files
-git status                     # check: no node_modules/, figures/ or screenshots/
-git commit -m "Hydrogen journey: Python reference model, physics core, viewer, story + audio engines, prologue"
-
-# then, after creating an empty repository on GitHub:
-git remote add origin https://github.com/<you>/hydrogen-orbitals.git
-git push -u origin main
+git clone https://github.com/lkalman1/hydrogen-orbitals
+cd hydrogen-orbitals
+npm install            # three.js + KaTeX, only needed for the offline tests
+npm test               # unit tests
+npm run serve          # open http://localhost:8000
 ```
 
-**Suggested workflow after that:** one branch per milestone (`m3-chapter1`,
-`m4-chapter2`, …). Update `TRACKER.md` in the same commit as the feature. Run
-`npm test` before every commit.
+**Workflow:** one branch per milestone (`m4-chapter2`, `m5-chapter3`, …), merged into `main`.
+Update `TRACKER.md` and this file in the same commit as the feature. Run `npm test`
+(and `npm run screenshot` for UI changes) before every commit.
 
-**GitHub Pages (M10):** the `web/` folder is fully static. Under Settings → Pages,
-choose "Deploy from a branch". Pages can only serve the repository root or `/docs`,
-so either move `web/` to `/docs` or add a small Actions workflow that publishes `web/`.
+**GitHub Pages (M10):** the `web/` folder is fully static. Pages can only serve the
+repository root or `/docs` from a branch, so publish with a small GitHub Actions
+workflow that uploads `web/` (Settings → Pages → Source: GitHub Actions).

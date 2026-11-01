@@ -371,6 +371,7 @@ The chord can anchor the main theme's harmony.
 ---
 
 ## Changelog
+- **2026-11-01:** Project moved into git and pushed to GitHub: https://github.com/lkalman1/hydrogen-orbitals (`main`).
 - **2026-11-01:** **M3 complete.** Chapter 1 (six beats): tap and hold to measure, a live histogram converging to the exact P(r), the Bohr-radius ring, and drag-to-confirm stationarity. Added the measurement shader mode, measuring tool, chart, marker, stats module, new sounds, deeper and glossary content, and tests.
 - **2026-10-31:** **M2 complete.** Story engine, two-layer caption system with the Go-deeper drawer and glossary, audio engine with Balmer-chord placeholder cues, bloom, scripted camera, the Ch 0 cold open, placeholder Ch 1–5, and the sandbox on a shared stage. `app.js` was split into `main.js`, `scene/`, `story/`, `audio/` and `sandbox.js`. Tests: 18 unit tests plus an end-to-end browser run.
 - **2026-10-31:** Resolved decisions D1–D6: middle-school main path with an optional undergrad/grad "Go deeper" layer; captions only; adaptive score; spin teaser only; desktop-first and phone-compatible; guided pacing. Added the caption system and per-chapter deeper-content plan.
