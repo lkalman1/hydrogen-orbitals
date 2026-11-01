@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+
+# generated output
+figures/
+tests/screenshots/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# editors / OS
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydrogen: A Journey</title>
+<meta name="description" content="An interactive journey through the quantum physics of the hydrogen atom, computed live from the Schrödinger equation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;650&display=swap">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+</script>
+</head>
+<body>
+<canvas id="scene" aria-label="3D view of a hydrogen atom. Drag to rotate, scroll to zoom."></canvas>
+
+<button id="mute-btn" class="btn icon-btn" type="button" aria-label="Mute sound">🔊</button>
+
+<!-- ============================================================ start -->
+<section id="start" hidden>
+  <div class="start-inner">
+    <p class="eyebrow">An interactive journey into the quantum atom · about 13 minutes</p>
+    <button id="begin-btn" class="btn btn-primary" type="button">Begin</button>
+    <p class="sound">🎧 Best with sound on</p>
+    <div class="start-links">
+      <button id="resume-btn" class="btn" type="button" hidden>Resume</button>
+      <button id="start-sandbox" class="btn" type="button">Skip to the sandbox</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ story -->
+<div id="story-ui" hidden>
+  <header id="topbar">
+    <button id="menu-btn" class="btn icon-btn" type="button" aria-label="Chapters">☰</button>
+    <span id="chapter-label"></span>
+    <ol id="progress" aria-label="Progress through the journey"></ol>
+  </header>
+
+  <div id="title-card" hidden>
+    <h1>Hydrogen</h1>
+    <p>A journey into the quantum atom</p>
+  </div>
+  <div id="chapter-banner" hidden aria-live="polite"></div>
+
+  <section id="rchart" class="panel" hidden aria-label="Histogram of measured distances">
+    <p class="rchart-title">Distance from the proton <span>(a₀)</span></p>
+    <canvas aria-hidden="true"></canvas>
+    <p class="rchart-key"><i class="bar"></i>your measurements <i class="dash"></i>exact prediction</p>
+    <p class="rchart-foot" aria-live="off"></p>
+    <p class="rchart-readout" hidden></p>
+  </section>
+  <div id="measure-tag" hidden></div>
+
+  <section id="caption-box" class="panel" aria-live="polite">
+    <button id="measure-btn" type="button" hidden>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="label">Measure</span>
+      <span class="rate" aria-hidden="true"></span>
+    </button>
+    <p id="caption"></p>
+    <div id="caption-actions">
+      <button id="back-btn" class="btn icon-btn" type="button" aria-label="Back">‹</button>
+      <span id="prompt" hidden></span>
+      <span class="spacer"></span>
+      <button id="deeper-btn" class="btn" type="button" aria-expanded="false" aria-controls="drawer">ⓘ Go deeper</button>
+      <button id="fallback-btn" class="btn" type="button" hidden></button>
+      <button id="continue-btn" class="btn btn-primary" type="button" hidden>Continue</button>
+    </div>
+  </section>
+
+  <aside id="drawer" class="panel" hidden aria-label="Go deeper">
+    <header>
+      <div><p class="eyebrow">Go deeper</p><h2 id="drawer-title"></h2></div>
+      <button id="drawer-close" class="btn icon-btn" type="button" aria-label="Close">✕</button>
+    </header>
+    <div id="drawer-body"></div>
+  </aside>
+
+  <div id="glossary-pop" role="tooltip" hidden></div>
+
+  <div id="menu" hidden>
+    <div class="menu-card panel" role="dialog" aria-label="Chapters">
+      <h2>Chapters</h2>
+      <button id="menu-close" class="btn icon-btn" type="button" aria-label="Close">✕</button>
+      <div id="menu-list"></div>
+      <div class="menu-foot">
+        <button id="menu-restart" class="btn" type="button">Restart from the beginning</button>
+        <button id="menu-sandbox" class="btn" type="button">Explore the sandbox</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ sandbox -->
+<div id="sandbox-ui" hidden>
+  <section id="info" class="panel" aria-live="polite">
+    <div id="name">3dz²</div>
+    <div id="qn"></div>
+    <dl>
+      <dt>Energy</dt><dd id="energy"></dd>
+      <dt>Mean radius</dt><dd id="meanr"></dd>
+      <dt>Nodes</dt><dd id="nodes"></dd>
+      <dt>Shape</dt><dd id="shape"></dd>
+      <dt>Samples</dt><dd id="count"></dd>
+    </dl>
+    <div class="legend"><span><i style="background:var(--accent)"></i>ψ &gt; 0</span><span><i style="background:var(--accent-2)"></i>ψ &lt; 0</span></div>
+  </section>
+
+  <section id="controls" class="panel">
+    <p class="section-label">Orbital (n, l)</p>
+    <div id="picker"></div>
+    <p class="section-label">Orientation (m)</p>
+    <div id="m-row"></div>
+    <div class="row">
+      <label><input type="checkbox" id="autorotate" checked> Auto-rotate camera</label>
+      <label>Samples
+        <select id="particles">
+          <option value="50000">50k</option>
+          <option value="100000">100k</option>
+          <option value="200000" selected>200k</option>
+          <option value="400000">400k</option>
+          <option value="800000">800k</option>
+        </select>
+      </label>
+    </div>
+    <p class="hint"><kbd>↑</kbd><kbd>↓</kbd> n &nbsp; <kbd>←</kbd><kbd>→</kbd> l &nbsp; <kbd>,</kbd><kbd>.</kbd> m &nbsp; <kbd>space</kbd> rotate &nbsp;·&nbsp; drag, scroll</p>
+  </section>
+
+  <div id="sandbox-top">
+    <button id="journey-btn" class="btn" type="button">← The journey</button>
+    <button id="about-toggle" class="btn" type="button">What am I seeing?</button>
+  </div>
+  <section id="about" class="panel" hidden>
+    <h2>Every dot is a possible electron position</h2>
+    <p>Dots are exact random samples of |ψ|² for the chosen orbital, computed live from the solution of the Schrödinger equation. Dense regions are where a measurement would most likely find the electron.</p>
+    <p>Colour is the sign of ψ. It doesn't change the probability, but it matters when orbitals combine.</p>
+    <p><b>Honest caveats.</b> The view auto-zooms, so every orbital looks the same size on screen (real size grows like n²: see Mean radius). The camera rotates, not the atom: an orbital is a <i>stationary</i> state and its cloud never moves. The morph between orbitals is a visual interpolation. The proton is drawn thousands of times too large.</p>
+    <p>Units: a₀ = 0.0529 nm (the Bohr radius). z is up.</p>
+  </section>
+</div>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>
