@@ -7,7 +7,9 @@ the exact solutions of the Schrödinger equation. Captions are written for middl
 school, with an optional "Go deeper" layer for undergraduates. There is an adaptive
 score, and a free-play sandbox at the end.
 
-## Run it (`web/`)
+**Play it:** https://lkalman1.github.io/hydrogen-orbitals/
+
+## Run it locally (`web/`)
 
 ```bash
 npm run serve          # or: python3 -m http.server 8000 -d web

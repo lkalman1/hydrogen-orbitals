@@ -405,6 +405,7 @@ The chord can anchor the main theme's harmony.
 ---
 
 ## Changelog
+- **2026-11-02:** GitHub Pages deployment: CI runs the unit tests, then publishes `web/` to https://lkalman1.github.io/hydrogen-orbitals/ on every push to `main`.
 - **2026-11-01:** **M4 complete** (branch `m4-chapter2`). Chapter 2: tunable laser, two-photon absorption with exact superposition rendering, energy ladder, quantum-jump cascades with true branching ratios, emission spectrum. Added the spectroscopy module, background sampling worker, photon system, and new sounds and content. 30 unit tests.
 - **2026-11-01:** Project moved into git and pushed to GitHub: https://github.com/lkalman1/hydrogen-orbitals (`main`).
 - **2026-11-01:** **M3 complete.** Chapter 1 (six beats): tap and hold to measure, a live histogram converging to the exact P(r), the Bohr-radius ring, and drag-to-confirm stationarity. Added the measurement shader mode, measuring tool, chart, marker, stats module, new sounds, deeper and glossary content, and tests.
