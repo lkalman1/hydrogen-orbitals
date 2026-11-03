@@ -26,13 +26,13 @@ const preview = (n, l, m) => (ctx, { direction }) => {
 
 // A tuning beat: laser on, complete when level `target` is reached; other levels
 // are real resonances too, so the atom absorbs, then falls back, and we hint.
-const tuneFor = (target) => (ctx, { direction }) => {
+const tuneFor = (target, mode = "two") => (ctx, { direction }) => {
   const { stage, lab, ui } = ctx;
   stage.showProton(true);
   stage.showAxes(false);
   if (lab.atom.n !== 1 || lab.busy || direction !== "forward") lab.reset();
   lab.ladder.show();
-  lab.enableLaser({ start: target === 2 ? 270 : lab.nm });
+  lab.enableLaser({ mode, start: mode === "two" ? (target === 2 ? 270 : lab.nm) : undefined });
   let misses = 0;
   return lab.on((e) => {
     if (e.type === "absorbed" && e.n === target) ctx.complete();
@@ -436,7 +436,166 @@ export const CHAPTERS = [
     title: "Light carries a twist",
     minutes: 3.5,
     music: "MUS-03",
-    beats: [{ ...comingSoon("Here a single photon's twist will reshape the cloud into lobes."), enter: preview(3, 2, 0) }],
+    beats: [
+      {
+        id: "one-photon",
+        uses: ["lab"],
+        caption: "This time, just one photon. Tune the new laser to lift the electron to level 2.",
+        prompt: "One photon must now carry all the energy, so it needs a shorter wavelength.",
+        nudge: "Hint: try around 122 nm.",
+        wait: { type: "scene", label: "Tune it for me" },
+        deeper: "photon-spin",
+        music: { layers: 1 },
+        enter: tuneFor(2, "one"),
+        onFallback({ lab }) { lab.autoTune(2); return "wait"; },
+      },
+      {
+        id: "lobes",
+        uses: ["lab"],
+        caption: "Level 2 again, but a brand-new shape: two lobes split by an empty flat plane. This is a [[p orbital]].",
+        wait: { type: "continue", label: "Continue" },
+        deeper: "p-orbital",
+        music: { layers: 2 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          if (lab.atom.n !== 2 || lab.atom.l !== 1 || lab.busy) lab.reset({ n: 2, l: 1, m: 0 });
+          lab.disableLaser();
+          lab.ladder.show();
+          lab.showNodes(true);
+          stage.rig.flyTo({ pitch: 0.15, zoom: 1 }, 2);
+        },
+      },
+      {
+        id: "twist",
+        uses: ["lab"],
+        caption: "Why? Every photon carries one unit of [[angular momentum]], a kind of twist. Absorbing it changes the cloud's shape.",
+        wait: { type: "continue", label: "Continue" },
+        deeper: "photon-spin",
+        music: { layers: 2 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          if (lab.atom.n !== 2 || lab.atom.l !== 1 || lab.busy) lab.reset({ n: 2, l: 1, m: 0 });
+          lab.disableLaser();
+          lab.ladder.show();
+          lab.showNodes(true);
+        },
+      },
+      {
+        id: "aim",
+        uses: ["lab"],
+        caption: "Test it. Starting from level 1, aim one photon at each target and see where the electron lands.",
+        prompt: "Pick a target: 2s, 2p or 3d. Each photon has exactly that level's energy.",
+        nudge: "Press one of the 2s, 2p or 3d buttons.",
+        wait: { type: "scene", label: "Try all three for me" },
+        deeper: "selection-rules",
+        music: { layers: 2 },
+        enter(ctx, { direction }) {
+          const { stage, lab, ui } = ctx;
+          stage.showProton(true);
+          lab.reset();
+          lab.disableLaser();
+          lab.ladder.show();
+          lab.showAim(true, { keep: direction === "back" });
+          const tried = new Set();
+          return lab.on((e) => {
+            if (e.type !== "aim") return;
+            tried.add(`${e.target.n}${e.target.l}`);
+            if (e.target.l !== e.landed.l) ui.setPrompt(`Aimed at ${e.target.n}${"spd"[e.target.l]}, landed in ${e.landed.n}p. Try another!`);
+            if (tried.size === 3) setTimeout(() => ctx.complete(), 2200);
+          });
+        },
+        onFallback({ lab }) { lab.aimAll(); return "wait"; },
+      },
+      {
+        id: "rule",
+        uses: ["lab"],
+        caption: "Every time: s became p. The rule is simple: one photon changes l by exactly one, up or down.",
+        wait: { type: "continue", label: "Continue" },
+        deeper: "selection-rules",
+        music: { layers: 3 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          if (lab.busy) lab.reset();
+          lab.ladder.show();
+          lab.showAim(true, { keep: true });
+        },
+      },
+      {
+        id: "centre",
+        uses: ["lab"],
+        caption: "Angular momentum flings the electron outward. s clouds crowd the proton, but p and d clouds leave it empty.",
+        wait: { type: "continue", label: "Continue" },
+        deeper: "centrifugal",
+        music: { layers: 3 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          lab.reset({ n: 2, l: 1, m: 0 });
+          lab.ladder.show();
+          stage.rig.flyTo({ pitch: 0.05, zoom: 0.35 }, 3);
+          return () => stage.rig.flyTo({ zoom: 1 }, 1.5);
+        },
+      },
+      {
+        id: "climb",
+        uses: ["lab"],
+        caption: "Back to level 3. Low-energy microwave photons can change the shape without changing the level: s, then p, then d.",
+        prompt: "Send microwave photons and watch the nodes trade places.",
+        nudge: "The button is just above this box.",
+        wait: { type: "scene", label: "Do it for me" },
+        deeper: "node-trade",
+        music: { layers: 3 },
+        enter(ctx) {
+          const { stage, lab } = ctx;
+          stage.showProton(true);
+          lab.reset({ n: 3, l: 0, m: 0 });
+          lab.ladder.show();
+          lab.showNodes(true);
+          lab.showMicrowave(true);
+          stage.rig.flyTo({ pitch: 0.25, zoom: 1 }, 1.5);
+          return lab.on((e) => { if (e.type === "mw-absorbed" && e.atom.l === 2) setTimeout(() => ctx.complete(), 1200); });
+        },
+        onFallback({ lab }) { lab.microwaveTo(2); return "wait"; },
+      },
+      {
+        id: "limit",
+        uses: ["lab"],
+        caption: "Try one more microwave photon. Can level 3 take an even twistier shape, with l = 3?",
+        prompt: "Send one more microwave photon.",
+        nudge: "Press Send a microwave photon.",
+        wait: { type: "scene", label: "Try it for me" },
+        deeper: "node-trade",
+        music: { layers: 3 },
+        enter(ctx) {
+          const { stage, lab, ui } = ctx;
+          stage.showProton(true);
+          if (lab.atom.n !== 3 || lab.atom.l !== 2 || lab.busy) lab.reset({ n: 3, l: 2, m: 0 });
+          lab.ladder.show();
+          lab.showNodes(true);
+          lab.showMicrowave(true);
+          return lab.on((e) => {
+            if (e.type !== "mw-pass") return;
+            ui.setPrompt("Nothing! Level 3 has no l = 3 shape: both of its n − 1 = 2 nodes are already angular.");
+            setTimeout(() => ctx.complete(), 3200);
+          });
+        },
+        onFallback({ lab }) { lab.microwave(); return "wait"; },
+      },
+      {
+        id: "summary",
+        uses: ["lab"],
+        caption: "So l sets the shape: s, p, d, f. Each step trades a round shell for a plane or cone.",
+        wait: { type: "continue", label: "Next chapter" },
+        deeper: "degeneracy",
+        music: { layers: 4 },
+        enter({ stage, lab }) {
+          stage.showProton(true);
+          if (lab.atom.n !== 3 || lab.atom.l !== 2 || lab.busy) lab.reset({ n: 3, l: 2, m: 0 });
+          lab.ladder.show();
+          lab.showNodes(true);
+          stage.rig.flyTo({ pitch: 0.45, zoom: 1.05 }, 3);
+        },
+      },
+    ],
   },
   {
     id: "ch4",

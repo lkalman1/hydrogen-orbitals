@@ -15,5 +15,7 @@ export const GLOSSARY = {
   wavelength: "The distance between one crest of a light wave and the next. It sets the colour: red light is about 650 nanometres, violet about 400.",
   laser: "A light source that produces a single, very pure colour, which can be tuned very precisely.",
   spectrum: "The set of colours (wavelengths) of light something gives off. Each kind of atom has its own pattern of lines, like a barcode.",
+  "angular momentum": "How much something is turning or spinning. In an atom it comes in whole-number steps, and it sets the shape of the electron's cloud.",
+  "p orbital": "An electron cloud with one unit of angular momentum (l = 1): two lobes on either side of a flat empty plane.",
   "stationary state": "A state of an atom that never changes over time, as long as nothing disturbs it. Its cloud stays perfectly still.",
 };

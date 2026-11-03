@@ -107,3 +107,15 @@ test("laser resonance detection picks the right ns level, with a forgiving toler
   // neighbouring lines never both count: tolerance is below half the closest spacing (6s–7s)
   assert.ok(TOLERANCE_NM < (twoPhotonNm(6) - twoPhotonNm(7)) / 2);
 });
+
+test("single-photon laser mode: Lyman lines reach np levels", async () => {
+  const { resonantLevel, MODES } = await import("../web/story/lab.js");
+  assert.equal(resonantLevel(121.57, "one").n, 2);
+  assert.equal(resonantLevel(102.57, "one").n, 3);
+  assert.equal(resonantLevel(97.25, "one").n, 4);
+  assert.equal(resonantLevel(112, "one").n, null);
+  assert.equal(MODES.one.l, 1); // one photon from s always lands in p
+  assert.equal(MODES.two.l, 0);
+  // the neighbouring Lyman lines near the series limit stay distinguishable
+  assert.ok(0.25 < (lineNm(1, 6) - lineNm(1, 7)) / 2);
+});

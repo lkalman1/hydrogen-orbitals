@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A guided, interactive journey through the quantum physics of hydrogen",
   "scripts": {
-    "test": "node --test tests/physics.test.mjs tests/story.test.mjs tests/spectroscopy.test.mjs",
+    "test": "node --test tests/physics.test.mjs tests/story.test.mjs tests/spectroscopy.test.mjs tests/nodes.test.mjs",
     "reference": "python3 tests/export_reference.py",
     "serve": "python3 -m http.server 8000 -d web",
     "screenshot": "node tests/screenshot.mjs"

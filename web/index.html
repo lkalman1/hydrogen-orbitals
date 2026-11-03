@@ -59,6 +59,21 @@
   </section>
   <div id="measure-tag" hidden></div>
 
+  <section id="aim" class="panel" hidden aria-label="Aim a single photon">
+    <p class="aim-title">One photon, starting from 1s. Aim for…</p>
+    <div class="aim-row" data-n="2" data-l="0"><button class="btn" type="button">2s</button><span class="aim-result"></span></div>
+    <div class="aim-row" data-n="2" data-l="1"><button class="btn" type="button">2p</button><span class="aim-result"></span></div>
+    <div class="aim-row" data-n="3" data-l="2"><button class="btn" type="button">3d</button><span class="aim-result"></span></div>
+    <p class="aim-note">Each photon has exactly the energy of the level you pick.</p>
+  </section>
+
+  <section id="node-counter" class="panel" hidden aria-live="polite">
+    <p id="node-title" class="node-title"></p>
+    <div id="node-chips"></div>
+    <p id="node-text" class="node-text"></p>
+    <p class="node-key"><i class="chip-node radial"></i>sphere (radial) <i class="chip-node angular"></i>plane or cone (angular)</p>
+  </section>
+
   <section id="spectrum" class="panel" hidden aria-label="Spectrum of light emitted by the atom">
     <p class="spectrum-title">Light given off by the atom <span>(wavelength, nm)</span></p>
     <canvas aria-hidden="true"></canvas>
@@ -71,7 +86,7 @@
   </section>
 
   <section id="laser" class="panel" hidden aria-label="Tunable laser">
-    <p class="laser-title">Tunable UV laser <span>two beams, from both sides</span></p>
+    <p class="laser-title"><span id="laser-title">Tunable UV laser</span> <span id="laser-sub" class="sub">two beams, from both sides</span></p>
     <div class="laser-read">
       <span id="laser-swatch" aria-hidden="true"></span>
       <b id="laser-readout">270.00 nm</b>
@@ -94,6 +109,7 @@
       <span class="rate" aria-hidden="true"></span>
     </button>
     <button id="release-btn" class="float-btn" type="button" hidden>Let go</button>
+    <button id="microwave-btn" class="float-btn" type="button" hidden>Send a microwave photon</button>
     <p id="caption"></p>
     <div id="caption-actions">
       <button id="back-btn" class="btn icon-btn" type="button" aria-label="Back">‹</button>

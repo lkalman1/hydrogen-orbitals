@@ -199,6 +199,87 @@ export const DEEPER = {
       galaxies with these lab values gives their redshifts, which is how cosmic expansion was measured.</p>
       <p>Try the 4s, 5s and 6s lines (around 194.5, 189.9 and 187.6 nm): their cascades complete the Balmer set.</p>`,
   },
+  "photon-spin": {
+    title: "A photon's angular momentum",
+    html: `
+      <p>A photon is a spin-1 particle: it carries angular momentum of magnitude <tex>\hbar</tex> along its
+      direction of travel (helicity ±1). Circularly polarized light is made of photons with one definite
+      helicity; linearly polarized light is a superposition of both.</p>
+      <p>Absorbing a photon, the atom must take up that angular momentum. In the dipole approximation the
+      transition amplitude is <tex>\langle n'l'm'|\,\boldsymbol\epsilon\cdot\mathbf r\,|nlm\rangle</tex>, and
+      <tex>\mathbf r</tex> is a rank-1 tensor (it behaves like <tex>Y_{1q}</tex>), so</p>
+      <tex display>\Delta l = \pm 1, \qquad \Delta m = 0, \pm1 .</tex>
+      <p>Here the laser comes from the left polarized vertically (along z), giving <tex>\Delta m = 0</tex>: the
+      electron lands in <tex>2p_z</tex>, and during the transition the superposition <tex>1s + 2p_z</tex> sloshes
+      up and down at the beat frequency. That oscillating charge is exactly the "antenna" that absorbs
+      (or emits) the light.</p>
+      <p>Single-photon lines from 1s (the Lyman series): 121.57 nm (2p), 102.57 nm (3p), 97.25 nm (4p)…
+      Air absorbs these wavelengths, so real experiments run in vacuum, hence "vacuum ultraviolet".</p>`,
+  },
+  "p-orbital": {
+    title: "The 2p orbital",
+    html: `
+      <tex display>\psi_{210} = \frac{1}{4\sqrt{2\pi}\,a_0^{3/2}}\,\frac{r}{a_0}\,e^{-r/2a_0}\cos\theta</tex>
+      <p>The <tex>\cos\theta</tex> factor is positive above the x–y plane and negative below (blue and orange):
+      the plane <tex>\theta = 90^\circ</tex> is an <em>angular node</em>. There is no radial node
+      (<tex>n - l - 1 = 0</tex>).</p>
+      <p><tex>|\mathbf L|^2 = l(l+1)\hbar^2 = 2\hbar^2</tex>. This <tex>2p_z</tex> state has <tex>L_z = 0</tex>: its
+      angular momentum points somewhere in the x–y plane, but not in any definite direction.</p>
+      <p>Same energy as 2s in this model (−3.40 eV). In real hydrogen 2s₁/₂ sits 1.06 GHz (4.4 µeV) above
+      2p₁/₂: the Lamb shift.</p>`,
+  },
+  "selection-rules": {
+    title: "Selection rules",
+    html: `
+      <p>For one photon (electric dipole):</p>
+      <tex display>\Delta l = \pm1, \quad \Delta m \in \{0, \pm1\}, \quad \text{parity flips}.</tex>
+      <p>So from 1s, one photon can only reach np states. Tuning to the energy of level 2 gives 2p and never 2s;
+      the energy of level 3 gives 3p, never 3s or 3d. (In this model 2s and 2p have exactly the same energy;
+      in reality the Lamb shift separates them, and the 2s lies off the photon's path anyway.)</p>
+      <ul>
+        <li>Two photons: <tex>\Delta l = 0, \pm2</tex>, which is why Chapter 2 needed two to reach 2s.</li>
+        <li>Rules can be broken weakly by higher-order processes (magnetic dipole, electric quadrupole), with rates
+        millions of times smaller.</li>
+      </ul>`,
+  },
+  centrifugal: {
+    title: "The centrifugal barrier",
+    html: `
+      <p>With <tex>u = rR</tex>, the radial equation contains an effective potential</p>
+      <tex display>V_\text{eff}(r) = \frac{l(l+1)\hbar^2}{2m_e r^2} - \frac{e^2}{4\pi\varepsilon_0 r}.</tex>
+      <p>The first term is the energy of rotation. It blows up as <tex>r \to 0</tex> for <tex>l > 0</tex>, so the
+      wavefunction is pushed out: near the nucleus <tex>R_{nl} \propto r^l</tex>, and the density goes like
+      <tex>r^{2l}</tex>. Only s states (<tex>l = 0</tex>) have <tex>|\psi(0)|^2 \ne 0</tex>.</p>
+      <p>That matters: effects that need the electron <em>at</em> the nucleus (the Darwin term, hyperfine contact
+      interaction, the proton-size shift) act only on s states.</p>`,
+  },
+  "node-trade": {
+    title: "Trading radial nodes for angular ones",
+    html: `
+      <p>Every orbital has <tex>n-1</tex> nodes: <tex>n-l-1</tex> radial spheres and <tex>l</tex> angular
+      planes or cones. At <tex>n = 3</tex>:</p>
+      <ul>
+        <li>3s: spheres at 1.90 and 7.10 <tex>a_0</tex>.</li>
+        <li>3p<sub>z</sub>: a sphere at 6 <tex>a_0</tex> and the plane <tex>z = 0</tex>.</li>
+        <li>3d<sub>z²</sub>: two cones at <tex>\cos^2\theta = 1/3</tex> (54.7° and 125.3°), no spheres.</li>
+      </ul>
+      <p>Since <tex>n - l - 1 \ge 0</tex>, <tex>l \le n-1</tex>: there are no 3f states. More nodes mean more
+      "wiggles" and more kinetic energy; in hydrogen the angular and radial wiggles happen to cost exactly the
+      same, so all shapes at level <tex>n</tex> share one energy.</p>`,
+  },
+  degeneracy: {
+    title: "Why s, p and d share an energy (almost)",
+    html: `
+      <p>In a general central potential, energy depends on both <tex>n</tex> and <tex>l</tex>. The pure
+      <tex>1/r</tex> potential has an extra, hidden symmetry (SO(4), from the conserved Runge–Lenz vector, the
+      same reason classical Kepler orbits don't precess), which makes all <tex>l</tex> at a given <tex>n</tex>
+      degenerate: <tex>n^2</tex> states per level.</p>
+      <p>Real hydrogen breaks this slightly. Fine structure (relativity + spin) splits levels by
+      <tex>\sim\alpha^2</tex> ≈ 10⁻⁵ relative; the Lamb shift (QED) splits 2s from 2p by 1.06 GHz. Those GHz
+      gaps are why <em>microwave</em> photons can step <tex>l</tex>, a real technique for preparing high-<tex>l</tex>
+      Rydberg states. The microwave transitions here are drawn without a beat, since in this model the energies
+      are exactly equal.</p>`,
+  },
   "coming-soon": {
     title: "Under construction",
     html: `<p>This chapter's interactive content arrives in a later milestone. The full design

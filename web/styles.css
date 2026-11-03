@@ -149,7 +149,7 @@ button { font: inherit; color: inherit; }
 #spectrum.on { animation: drop-in .6s var(--ease-out) both; }
 @keyframes drop-in { from { opacity: 0; transform: translate(-50%, -10px); } }
 .spectrum-title, .ladder-title, .laser-title { margin: 0 0 4px; font-weight: 600; font-size: 13px; }
-.spectrum-title span, .laser-title span { color: var(--muted); font-weight: 400; }
+.spectrum-title span, .laser-title .sub { color: var(--muted); font-weight: 400; }
 #spectrum canvas { display: block; width: 100%; height: 64px; }
 
 #ladder { left: 16px; top: 50%; transform: translateY(-50%); width: 250px; padding: 12px 12px 10px; z-index: 12; }
@@ -172,8 +172,8 @@ button { font: inherit; color: inherit; }
 #laser { right: 16px; top: 50%; transform: translateY(-50%); width: 290px; padding: 14px; z-index: 12; --laser: var(--accent); }
 #laser.on { animation: slide-in-r .6s var(--ease-out) both; }
 @keyframes slide-in-r { from { opacity: 0; transform: translate(16px, -50%); } }
-#laser.shake { animation: shake .4s ease; }
-@keyframes shake { 20%, 60% { transform: translate(-6px, -50%); } 40%, 80% { transform: translate(6px, -50%); } }
+.shake { animation: shake .4s ease; }
+@keyframes shake { 20%, 60% { translate: -6px 0; } 40%, 80% { translate: 6px 0; } }
 .laser-read { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; margin: 8px 0; }
 #laser-swatch { width: 20px; height: 20px; border-radius: 50%; background: var(--laser); box-shadow: 0 0 14px var(--laser); flex: none; }
 #laser-readout { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
@@ -190,6 +190,28 @@ button { font: inherit; color: inherit; }
 #laser.resonant .laser-meter { box-shadow: 0 0 14px var(--laser); }
 #fire-btn { width: 100%; font-size: 16px; padding: 10px; }
 #laser.resonant #fire-btn { animation: glow 1.4s ease-in-out infinite; }
+
+#aim { right: 16px; top: 50%; transform: translateY(-50%); width: 290px; padding: 14px; z-index: 12; }
+#aim.on { animation: slide-in-r .6s var(--ease-out) both; }
+.aim-title { margin: 0 0 10px; font-weight: 600; font-size: 13px; }
+.aim-row { display: grid; grid-template-columns: 56px 1fr; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--panel-border); }
+.aim-row .btn { font-weight: 600; font-size: 15px; padding: 7px 0; }
+.aim-result { color: var(--ink-2); font-size: 12px; }
+.aim-row.done .aim-result { animation: rise .4s var(--ease-out); }
+.aim-row.done:not(.hit) .aim-result { color: var(--warm); }
+.aim-row.hit .aim-result { color: #8fe3a8; }
+.aim-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
+
+#node-counter { right: 16px; top: 50%; transform: translateY(-50%); width: 290px; padding: 14px; z-index: 12; }
+#node-counter.bump #node-chips { animation: pop .5s var(--spring); }
+.node-title { margin: 0 0 8px; font-weight: 600; font-size: 13px; }
+#node-chips { display: flex; gap: 8px; min-height: 30px; align-items: center; }
+.chip-node { display: inline-block; width: 26px; height: 26px; border-radius: 50%; }
+.chip-node.radial { border: 3px solid #ffd9b8; box-shadow: 0 0 12px rgba(255,217,184,.5); }
+.chip-node.angular { border-radius: 4px; background: linear-gradient(135deg, transparent 42%, #b9a2ff 42% 58%, transparent 58%); border: 1px solid rgba(185,162,255,.5); box-shadow: 0 0 12px rgba(185,162,255,.4); }
+.node-text { margin: 8px 0 0; color: var(--ink-2); font-size: 12px; }
+.node-key { margin: 8px 0 0; color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.node-key .chip-node { width: 12px; height: 12px; border-width: 2px; }
 
 .float-btn { position: absolute; left: 50%; top: -70px; transform: translateX(-50%); padding: 12px 26px; border-radius: 999px;
   border: 1px solid rgba(255,217,184,.4); background: rgba(14,18,28,.85); color: var(--ink); font-weight: 600; font-size: 15px; cursor: pointer;
@@ -303,6 +325,10 @@ kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--panel-border);
   #laser-region { flex-basis: auto; padding-left: 0; }
   .laser-meter { margin: 8px 0; }
   #fire-btn { padding: 8px; }
+  #aim { left: 10px; right: 10px; top: auto; bottom: calc(var(--caption-h, 140px) + 12px); width: auto; transform: none; padding: 10px 12px; }
+  #node-counter { left: 10px; right: 10px; top: 58px; width: auto; transform: none; padding: 8px 12px; }
+  #aim.on { animation: fade .4s ease both; }
+  .aim-note, .node-key { display: none; }
   #drawer { top: auto; left: 10px; right: 10px; bottom: 10px; width: auto; height: 62vh; transform: translateY(110%); }
   #drawer.open { transform: none; }
   #info { padding: 10px 12px; min-width: 0; top: 60px; }

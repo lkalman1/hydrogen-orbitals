@@ -282,6 +282,31 @@ export const CUES = {
       bell(ctx, out, t, lineHz(nm), { dur: 3, level: 0.14 });
       bell(ctx, out, t, lineHz(nm) * 2, { dur: 1.5, level: 0.04, ratio: 2, index: 0.5 });
     },
+    // a microwave photon: low, soft and slow (it carries ~10⁻⁵ eV, not 10 eV)
+    "microwave": (ctx, out, t) => {
+      for (const [f, level] of [[ROOT / 2, 0.22], [ROOT, 0.08]]) {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(level, t + 0.5);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+        o.connect(g).connect(out);
+        o.start(t); o.stop(t + 1.7);
+      }
+    },
+    // a new shape: one more harmonic for each unit of l (spherical ↔ musical harmonics)
+    "shape": (ctx, out, t, { l = 0 } = {}) => {
+      const base = ROOT * 2;
+      for (let k = 1; k <= l + 1; k++) {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.value = base * k;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.09 / k, t + 0.04 + 0.06 * k);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+        o.connect(g).connect(out);
+        o.start(t); o.stop(t + 2.7);
+      }
+    },
     // the slider locks onto a line
     "snap": (ctx, out, t) => {
       bell(ctx, out, t, ROOT * 16, { dur: 0.3, level: 0.05, ratio: 2, index: 0.4 });

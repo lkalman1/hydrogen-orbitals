@@ -115,6 +115,15 @@ export class EnergyLadder {
     this.#add(g, `2 × ${nm.toFixed(1)} nm`, 84, ym, color);
   }
 
+  /** Single-photon absorption n1 → n2: one arrow. */
+  absorbOne(n1, n2, nm) {
+    const color = rgbCss(wavelengthRGB(nm));
+    const y1 = yOf(levelEV(n1)), y2 = yOf(levelEV(n2));
+    const g = svg("g");
+    g.append(this.#arrow(84, y1, y2, color));
+    this.#add(g, `1 × ${nm.toFixed(1)} nm`, 84, (y1 + y2) / 2, color);
+  }
+
   /** Emission n1 → n2 (wavy arrow). twoPhoton: dashed, no single wavelength. */
   emit(n1, n2, nm, { twoPhoton = false } = {}) {
     const color = twoPhoton ? "#9aa4b5" : rgbCss(wavelengthRGB(nm));

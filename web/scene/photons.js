@@ -76,8 +76,8 @@ export class Photons {
    * Launch a photon. from/to: THREE.Vector3 in world space (or functions returning one,
    * re-evaluated each frame so they follow the camera). Resolves when it arrives.
    */
-  spawn({ nm, from, to, duration = 0.9, label = true, dim = false, passThrough = false }) {
-    const [r, g, b] = wavelengthRGB(nm);
+  spawn({ nm, from, to, duration = 0.9, label = true, dim = false, passThrough = false, color: rgb, text }) {
+    const [r, g, b] = rgb ?? wavelengthRGB(nm);
     const color = new THREE.Color(r, g, b);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(POINTS * 3), 3));
@@ -87,7 +87,7 @@ export class Photons {
     line.frustumCulled = false;
     const head = glowSprite();
     head.material.color = color;
-    const tag = label ? textSprite(describeNm(nm), `rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0})`) : null;
+    const tag = label ? textSprite(text ?? describeNm(nm), `rgb(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0})`) : null;
     this.scene.add(line, head);
     if (tag) this.scene.add(tag);
     // visual wave: more wiggles for shorter wavelengths

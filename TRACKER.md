@@ -33,7 +33,7 @@ Status legend: ✅ done · 🟡 in progress · ⬜ not started · 🧪 needs ver
 | M2  | Story engine + caption system + audio engine + Ch 0 cold open | ✅ 2026-10-31 | Chapters and beats play, skip and resume; captions + Go-deeper drawer work; the audio engine plays placeholder cues |
 | M3  | Ch 1 — "The electron is a cloud" | ✅ 2026-11-01 | Measure mode builds up 1s; the P(r) peak at 1 a₀ is shown |
 | M4  | Ch 2 — n: climbing the ladder | ✅ 2026-11-01 | Two-photon 1s→2s→3s works; a spectrum barcode builds from emissions |
-| M5  | Ch 3 — l: light carries a twist | ⬜ | Lyman-α 1s→2p; Δl = ±1 is enforced; the n = 3 ladder climbs s→p→d |
+| M5  | Ch 3 — l: light carries a twist | ✅ 2026-11-03 | Lyman-α 1s→2p; Δl = ±1 is enforced; the n = 3 ladder climbs s→p→d |
 | M6  | Ch 4 — m: a magnetic field gives space a direction | ⬜ | Zeeman fan-out; current swirl; σ± photons select Δm |
 | M7  | Ch 5 — Finale + sandbox | ⬜ | The circular Rydberg state becomes the Bohr orbit; free play opens |
 | M8  | Score & sound integration | ⬜ | All cues in the cue sheet are final and mixed |
@@ -216,8 +216,8 @@ The chord can anchor the main theme's harmony.
 | Photons as objects: fire, miss, absorb, emit; colour from wavelength; two-photon | Ch 2 | ✅ |
 | Energy ladder + spectrum barcode | Ch 2 | ✅ |
 | True-scale toggle | Ch 2 | ⬜ |
-| Selection-rule engine (Δl = ±1, Δm ∈ {0, ±1}, polarization) | Ch 3 | ⬜ |
-| Node surfaces (radial spheres, angular planes/cones) + node counter | Ch 3 | ⬜ |
+| Selection-rule engine (Δl = ±1, Δm ∈ {0, ±1}, polarization) | Ch 3 | 🟡 Δl done; Δm + polarization in Ch 4 |
+| Node surfaces (radial spheres, angular planes/cones) + node counter | Ch 3 | ✅ |
 | Complex m-basis, phase colouring, probability-current swirl | Ch 4 | ⬜ |
 | Magnetic field lines + Zeeman energy fan | Ch 4 | ⬜ |
 | Circular-state preset to n = 30 (needs a sampler check at large n) | Ch 5 | ⬜ |
@@ -267,6 +267,37 @@ The chord can anchor the main theme's harmony.
 ---
 
 ## Done so far
+
+### M5 — Chapter 3: "Light carries a twist" (l) ✅
+
+| Beat | What happens | Interaction |
+|---|---|---|
+| one-photon | Vacuum-UV laser (90–130 nm), single beam; 121.57 nm → 1s + 2pz superposition sloshes up and down, then 2p | Tune + Fire (fallback) |
+| lobes | 2p with its nodal plane drawn; node counter (0 spheres + 1 plane) | Continue |
+| twist | A photon carries one unit of angular momentum | Continue |
+| aim | Aim one photon at 2s, 2p or 3d from 1s: it always lands in p (2s → 2p, 3d → 3p), then decays back | Try all three (fallback: "Try all three for me") |
+| rule | Results stay up: Δl = ±1 | Continue |
+| centre | Camera dives into 2p: empty at the nucleus (R ∝ rˡ) | Continue |
+| climb | 3s → 3p → 3d with microwave photons; spheres turn into planes/cones in 3D, counter updates | Send microwave photons |
+| limit | One more microwave photon passes straight through: no 3f (l ≤ n − 1) | Send one more |
+| summary | l sets the shape | Continue |
+
+| Feature | File | Notes |
+|---|---|---|
+| Node geometry for any real orbital: radial zeros, θ-cones, φ-planes | `web/nodes.js` | Tested: analytic radii (2s at 2, 3s at (9 ∓ 3√3)/2, 3p at 6), dz² cones at 54.7°/125.3°, and n − 1 nodes split correctly for all 140 orbitals up to n = 7 |
+| 3D node surfaces: rim-glow spheres, cones, planes, growing out from the nucleus with a bright leading edge | `web/scene/nodes.js` | |
+| Lab modes: two-photon (Ch 2) and single-photon vacuum UV (Ch 3); microwave Δl = +1 steps with pass-through at l = n − 1; aim game; node counter | `web/story/lab.js` | Microwave transitions drawn coherent with no beat (energies equal in this model) |
+| Photons with custom colour and label (microwaves); single-photon ladder arrows | `web/scene/photons.js`, `web/story/ladder.js` | |
+| Sounds: microwave pulse; "shape" chord with l + 1 harmonics | `web/audio/cues.js` | |
+| Go deeper: photon spin and Δl/Δm from dipole matrix elements, the 2p wavefunction, selection rules, centrifugal barrier, node trade, why s/p/d share an energy (SO(4), Lamb shift, fine structure) | `web/story/deeper.js` | |
+| Framework: `beforeBeat()` tool hook clears per-beat extras | `web/story/ui.js` | Fixed an overlap bug the end-to-end test caught |
+| Tests: 4 new unit tests (34 total); end-to-end Ch 3 on desktop + phone, asserting 121.57 nm → 2p, aim 2s → 2p and 3d → 3p, microwaves → 3d | `tests/` | |
+
+**Design change:** the "corkscrew photon" moved to Ch 4. The Ch 3 laser is linearly polarized (vertical), so the photon is drawn as a plane wave and the atom lands in 2p_z (Δm = 0). Circular polarization, whose photons have a definite helicity (a real corkscrew), is what selects Δm = ±1, so it belongs with m.
+
+**M5 follow-ups**
+- 🧪 Real-device check: node-surface brightness and the 3p sphere's visibility; the speed of the camera dive.
+- The phone ladder is very small; consider a compact horizontal version.
 
 ### M4 — Chapter 2: "Climbing the ladder" (n) ✅
 
@@ -405,6 +436,7 @@ The chord can anchor the main theme's harmony.
 ---
 
 ## Changelog
+- **2026-11-03:** **M5 complete** (branch `m5-chapter3`). Chapter 3: single-photon absorption (1s → 2p with dipole sloshing), the aim game showing Δl = ±1, the centrifugal close-up, a microwave climb 3s → 3p → 3d with 3D node surfaces and counter, and the l ≤ n − 1 limit. 34 unit tests.
 - **2026-11-02:** GitHub Pages deployment: CI runs the unit tests, then publishes `web/` to https://lkalman1.github.io/hydrogen-orbitals/ on every push to `main`.
 - **2026-11-01:** **M4 complete** (branch `m4-chapter2`). Chapter 2: tunable laser, two-photon absorption with exact superposition rendering, energy ladder, quantum-jump cascades with true branching ratios, emission spectrum. Added the spectroscopy module, background sampling worker, photon system, and new sounds and content. 30 unit tests.
 - **2026-11-01:** Project moved into git and pushed to GitHub: https://github.com/lkalman1/hydrogen-orbitals (`main`).

@@ -232,7 +232,67 @@ const clickContinue = async (page) => {
   await shot(page, "27-ch2-spectrum");
   await clickContinue(page);
   await page.waitForTimeout(800);
-  await expectBeat(page, "3/coming-soon");
+  await expectBeat(page, "3/one-photon");
+  await page.close();
+}
+
+// ---------------------------------------------------------------- chapter 3 (deep link)
+{
+  const page = await open("#ch3");
+  await page.locator("#begin-btn").click();
+  await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
+  await expectBeat(page, "3/one-photon");
+  await page.locator("#laser-nm").fill("121.9");
+  await page.locator("#laser-nm").dispatchEvent("change");
+  await page.waitForTimeout(300);
+  const tuned = await page.evaluate(() => window.__hydrogen.lab.nm);
+  if (Math.abs(tuned - 121.57) > 0.02) errors.push(`snap (one photon): laser at ${tuned}`);
+  await page.locator("#fire-btn").click();
+  await page.waitForTimeout(2100);
+  await shot(page, "30-ch3-sloshing");
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "lobes", null, { timeout: 20000 });
+  const s2p = await page.evaluate(() => ({ ...window.__hydrogen.stage.cloud.state }));
+  if (s2p.n !== 2 || s2p.l !== 1) errors.push(`one photon at 121.57 nm should give 2p, got ${JSON.stringify(s2p)}`);
+  await page.waitForTimeout(2200);
+  await shot(page, "31-ch3-2p-node-plane");
+  await clickContinue(page); // → twist
+  await clickContinue(page); // → aim
+  await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
+  await page.locator('#aim .aim-row[data-l="0"] button').click();
+  await page.waitForFunction(() => document.querySelector('#aim .aim-row[data-l="0"]').classList.contains("done"), null, { timeout: 15000 });
+  const landed = await page.locator('#aim .aim-row[data-l="0"] .aim-result').textContent();
+  if (!landed.includes("2p")) errors.push(`aiming at 2s should land in 2p: "${landed}"`);
+  await page.waitForTimeout(400);
+  await shot(page, "32-ch3-aim-2s");
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.keyboard.press("Enter"); // fallback: try the remaining targets
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "rule", null, { timeout: 45000 });
+  const results = await page.locator("#aim .aim-result").allTextContents();
+  if (!results[2].includes("3p")) errors.push(`aiming at 3d should land in 3p: ${results}`);
+  await page.waitForTimeout(800);
+  await shot(page, "33-ch3-rule");
+  await clickContinue(page); // → centre
+  await page.waitForTimeout(3300);
+  await shot(page, "34-ch3-centre");
+  await clickContinue(page); // → climb
+  await page.locator("#microwave-btn").waitFor({ state: "visible", timeout: 15000 });
+  await page.locator("#microwave-btn").click();
+  await page.waitForFunction(() => window.__hydrogen.lab.atom.l === 1 && !window.__hydrogen.lab.busy, null, { timeout: 15000 });
+  await page.waitForTimeout(1500);
+  await shot(page, "35-ch3-3p-nodes");
+  await page.locator("#microwave-btn").click();
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "limit", null, { timeout: 20000 });
+  await page.waitForTimeout(1800);
+  await shot(page, "36-ch3-3d-cones");
+  await page.locator("#microwave-btn").click();
+  await page.waitForTimeout(1000);
+  await shot(page, "37-ch3-limit");
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "summary", null, { timeout: 20000 });
+  const s3d = await page.evaluate(() => ({ ...window.__hydrogen.stage.cloud.state }));
+  if (s3d.n !== 3 || s3d.l !== 2) errors.push(`microwaves should end in 3d, got ${JSON.stringify(s3d)}`);
+  await clickContinue(page);
+  await page.waitForTimeout(800);
+  await expectBeat(page, "4/coming-soon");
   await page.close();
 }
 
@@ -304,7 +364,22 @@ const clickContinue = async (page) => {
   await page.close();
 }
 
+{
+  const page = await open("#ch3", PHONE);
+  await page.locator("#begin-btn").click();
+  await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(() => window.__hydrogen.story.current.id === "lobes", null, { timeout: 20000 });
+  await page.waitForTimeout(2000);
+  await shot(page, "38-phone-ch3-lobes");
+  await clickContinue(page);
+  await clickContinue(page);
+  await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
+  await shot(page, "39-phone-ch3-aim");
+  await page.close();
+}
+
 await browser.close();
 server.close();
 if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-console.log("ok: prologue, chapter 1 measuring, chapter 2 laser/ladder/spectrum, drawer, glossary, menu, resume, deep links and phone layout checked; screenshots in tests/screenshots/");
+console.log("ok: prologue, chapters 1–3, drawer, glossary, menu, resume, deep links and phone layout checked; screenshots in tests/screenshots/");

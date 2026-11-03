@@ -76,11 +76,14 @@ export class StoryUI {
     let bottom = $("caption-box").getBoundingClientRect().top;
     const phone = window.innerWidth <= 720;
     document.documentElement.style.setProperty("--caption-h", `${window.innerHeight - bottom}px`);
-    for (const id of ["measure-btn", "release-btn"]) {
+    for (const id of ["measure-btn", "release-btn", "microwave-btn"]) {
       const el = $(id);
       if (!el.hidden) bottom = Math.min(bottom, el.getBoundingClientRect().top - 8);
     }
-    if (phone && !$("laser").hidden) bottom = Math.min(bottom, $("laser").getBoundingClientRect().top - 8);
+    for (const id of ["laser", "aim"]) {
+      if (phone && !$(id).hidden) bottom = Math.min(bottom, $(id).getBoundingClientRect().top - 8);
+    }
+    if (phone && !$("node-counter").hidden) top = Math.max(top, $("node-counter").getBoundingClientRect().bottom);
     if (!$("spectrum").hidden) top = Math.max(top, $("spectrum").getBoundingClientRect().bottom);
     if (phone && !$("rchart").hidden) top = Math.max(top, $("rchart").getBoundingClientRect().bottom);
     return { top, bottom: bottom > top + 120 ? bottom : window.innerHeight };
@@ -135,7 +138,10 @@ export class StoryUI {
       },
     };
     this.ctx = ctx;
-    for (const [name, tool] of Object.entries(this.tools)) if (!def.uses?.includes(name)) tool.release?.();
+    for (const [name, tool] of Object.entries(this.tools)) {
+      if (def.uses?.includes(name)) tool.beforeBeat?.(); // clear per-beat extras; the beat turns on what it needs
+      else tool.release?.();
+    }
     this.cleanup = def.enter?.(ctx, { direction }) ?? null;
     this.stage.resize(); // the beat may have shown or hidden layout elements
 
