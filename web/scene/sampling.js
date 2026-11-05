@@ -23,7 +23,7 @@ export class Sampling {
   }
 
   #run(msg) {
-    if (msg.kind === "state") return sampleState(buildTables(msg.n, msg.l, msg.m), makeRanks(msg.count, msg.seed));
+    if (msg.kind === "state") return sampleState(buildTables(msg.n, msg.l, msg.m, { complex: msg.complex }), makeRanks(msg.count, msg.seed));
     return buildMixture(msg.a, msg.b, msg.count, msg.seed);
   }
 
@@ -44,7 +44,7 @@ export class Sampling {
   }
 
   /** Exact samples of state (n, l, m) for `count` particles with the cloud's ranks. */
-  state(n, l, m, count, seed = 1) { return this.request({ kind: "state", n, l, m, count, seed }); }
+  state(n, l, m, count, seed = 1, complex = false) { return this.request({ kind: "state", n, l, m, count, seed, complex }); }
 
   /** Importance-sampled particles for a transition a → b. */
   mixture(a, b, count, seed = 5) { return this.request({ kind: "mixture", a, b, count, seed }); }

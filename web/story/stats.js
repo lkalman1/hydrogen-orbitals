@@ -35,6 +35,13 @@ export class RadialHistogram {
     this.sum = 0;
   }
   reset() { this.counts.fill(0); this.total = 0; this.sum = 0; }
+
+  /** Change the distance range (clears the histogram). */
+  setRange(rMax) {
+    this.rMax = rMax;
+    this.width = rMax / this.bins;
+    this.reset();
+  }
   add(r) {
     this.total++;
     this.sum += r;

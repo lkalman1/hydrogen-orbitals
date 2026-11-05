@@ -171,6 +171,7 @@ export const CUES = {
     "MUS-04": { layers: theme(ROOT * BALMER[3] / 2) },  // Ch 4 (placeholder)
     "MUS-05": { layers: theme(ROOT) },                  // finale (placeholder)
     "MUS-SBX": { layers: [drone(ROOT), pad(ROOT, 0.02)] },
+    "MUS-LAB": { layers: theme(ROOT) },                 // the lab: layers follow the atom's state
   },
   stingers: {
     // title: the Balmer chord rung as an arpeggio of bells

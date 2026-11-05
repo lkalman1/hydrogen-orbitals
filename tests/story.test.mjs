@@ -87,9 +87,11 @@ test("progress fraction runs 0 → 1", () => {
 test("deep links", () => {
   assert.deepEqual(parseHash("#ch2", 6), { mode: "story", chapter: 2 });
   assert.equal(parseHash("#ch9", 6), null);
-  assert.deepEqual(parseHash("#sandbox", 6), { mode: "sandbox" });
-  assert.deepEqual(parseHash("#n3l2m-1", 6), { mode: "sandbox", orbital: { n: 3, l: 2, m: -1 } });
-  assert.deepEqual(parseHash("#3,1,0", 6), { mode: "sandbox", orbital: { n: 3, l: 1, m: 0 } });
+  assert.deepEqual(parseHash("#tour", 6), { mode: "story", chapter: null });
+  assert.deepEqual(parseHash("#lab", 6), { mode: "lab" });
+  assert.deepEqual(parseHash("#sandbox", 6), { mode: "lab" });
+  assert.deepEqual(parseHash("#n3l2m-1", 6), { mode: "lab", orbital: { n: 3, l: 2, m: -1 } });
+  assert.deepEqual(parseHash("#3,1,0", 6), { mode: "lab", orbital: { n: 3, l: 1, m: 0 } });
   assert.equal(parseHash("#n2l2m0", 6), null); // l < n violated
   assert.equal(parseHash("", 6), null);
 });

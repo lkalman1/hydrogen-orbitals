@@ -27,15 +27,18 @@ function ringTexture() {
 }
 
 export class Measurement {
-  constructor({ stage, audio }) {
+  /** els: { button, tag, chart } (defaults: the guided tour's elements). */
+  constructor({ stage, audio, els = {} }) {
     this.stage = stage;
     this.audio = audio;
     this.hist = new RadialHistogram();
-    this.chart = new RadialChart(this.hist);
+    this.chart = new RadialChart(this.hist, els.chart ?? $("rchart"));
     this.marker = new RadiusMarker(stage.scene);
-    this.button = $("measure-btn");
+    this.button = els.button ?? $("measure-btn");
     this.rateEl = this.button.querySelector(".rate");
-    this.tag = $("measure-tag");
+    this.tag = els.tag ?? $("measure-tag");
+    this.labelHold = els.labelHold ?? "Hold to measure";
+    this.labelTap = els.labelTap ?? "Measure";
     this.active = false;
     this.allowHold = false;
     this.holding = false;
@@ -72,6 +75,8 @@ export class Measurement {
     if (cloud.state.n !== 1 || cloud.state.l !== 0) cloud.setState(1, 0, 0, { mode: "instant" });
     cloud.fadeTo(1, 0.4);
     cloud.hideAll();
+    if (this.hist.rMax !== 6) this.hist.setRange(6);
+    this.chart.setTheory(1, 0);
     this.hist.reset();
     this.chart.reset();
     this.#stopHold();
@@ -83,12 +88,28 @@ export class Measurement {
     this.allowHold = hold;
     this.button.hidden = false;
     this.button.classList.toggle("can-hold", hold);
-    this.button.querySelector(".label").textContent = hold ? "Hold to measure" : "Measure";
+    this.button.querySelector(".label").textContent = hold ? this.labelHold : this.labelTap;
   }
 
   disable() {
     this.active = false;
     this.button.hidden = true;
+    this.#stopHold();
+  }
+
+  /** Point the histogram at the cloud's current state (clears it; the cloud is untouched). */
+  retarget() {
+    const { cloud } = this.stage;
+    const { n, l } = cloud.state;
+    this.hist.setRange(Math.ceil(cloud.radius(0.995)));
+    this.chart.setTheory(n, l);
+    this.chart.reset();
+  }
+
+  /** Start measuring the cloud's current state from scratch (nothing shown yet). */
+  startOver() {
+    this.retarget();
+    this.stage.cloud.hideAll();
     this.#stopHold();
   }
 

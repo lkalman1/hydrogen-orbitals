@@ -17,6 +17,9 @@ const WEB = join(ROOT, "web");
 const OUT = join(ROOT, "tests", "screenshots");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css" };
 const DESKTOP = { width: 1400, height: 860 };
+// optional filter: `node tests/screenshot.mjs lab` or `… tour` runs just that part
+const only = process.argv[2];
+const want = (section) => !only || only === section;
 const PHONE = { width: 390, height: 844 };
 
 const server = createServer(async (req, res) => {
@@ -32,7 +35,7 @@ const browser = await chromium.launch({
   args: ["--use-gl=angle", "--use-angle=swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"],
 });
 const errors = [];
-await rm(OUT, { recursive: true, force: true });
+if (!only) await rm(OUT, { recursive: true, force: true });
 await mkdir(OUT, { recursive: true });
 
 async function open(hash = "", viewport = DESKTOP) {
@@ -63,8 +66,8 @@ const clickContinue = async (page) => {
 };
 
 // ---------------------------------------------------------------- desktop journey
-{
-  const page = await open();
+if (want("tour")) {
+  const page = await open("#tour");
   await page.locator("#begin-btn").waitFor({ state: "visible" });
   await page.waitForTimeout(800);
   await shot(page, "01-start");
@@ -142,11 +145,11 @@ const clickContinue = async (page) => {
   await shot(page, "10-ch1-holding");
   await page.waitForFunction(() => window.__hydrogen.story.current.id === "pattern", null, { timeout: 30000 });
   await page.mouse.up();
-  const measured = await page.evaluate(() => window.__hydrogen.measure.count);
+  const measured = await page.evaluate(() => window.__hydrogen.tools.measure.count);
   if (measured < 20000) errors.push(`hold: only ${measured} measurements`);
   await page.waitForTimeout(2600);
   await shot(page, "11-ch1-pattern");
-  const stats = await page.evaluate(() => ({ mean: window.__hydrogen.measure.hist.mean, n: window.__hydrogen.measure.hist.total }));
+  const stats = await page.evaluate(() => ({ mean: window.__hydrogen.tools.measure.hist.mean, n: window.__hydrogen.tools.measure.hist.total }));
   if (Math.abs(stats.mean - 1.5) > 0.02) errors.push(`measured mean ${stats.mean} over ${stats.n} (expected 1.5)`);
   await clickContinue(page);
   await page.waitForTimeout(2200);
@@ -172,18 +175,20 @@ const clickContinue = async (page) => {
   if (locked !== 3) errors.push(`menu: expected 3 locked chapters, got ${locked}`);
   await page.locator("#menu-sandbox").click();
   await page.waitForTimeout(1500);
-  await shot(page, "15-sandbox-from-menu");
-  if (await page.evaluate(() => document.getElementById("sandbox-ui").hidden)) errors.push("menu → sandbox did not open the sandbox");
+  await shot(page, "15-lab-from-menu");
+  if (await page.evaluate(() => document.getElementById("lab-ui").hidden)) errors.push("menu → lab did not open the lab");
 
-  // back to the journey resumes where we were
-  await page.locator("#journey-btn").click();
+  // the lab's Guided tour button offers to resume where we were
+  await page.locator("#tour-btn").click();
+  await page.locator("#resume-btn").waitFor({ state: "visible" });
+  await page.locator("#resume-btn").click();
   await page.waitForTimeout(800);
   await expectBeat(page, "2/ladder");
   await page.close();
 }
 
 // ---------------------------------------------------------------- chapter 2 (deep link)
-{
+if (want("tour")) {
   const page = await open("#ch2");
   await page.locator("#begin-btn").click();
   await page.waitForTimeout(1400);
@@ -201,7 +206,7 @@ const clickContinue = async (page) => {
   await page.locator("#laser-nm").fill("243.5");
   await page.locator("#laser-nm").dispatchEvent("change");
   await page.waitForTimeout(300);
-  const tuned = await page.evaluate(() => window.__hydrogen.lab.nm);
+  const tuned = await page.evaluate(() => window.__hydrogen.tools.lab.nm);
   if (Math.abs(tuned - 243.14) > 0.02) errors.push(`snap: laser at ${tuned}`);
   await shot(page, "22-ch2-resonant");
   await page.locator("#fire-btn").click();
@@ -226,7 +231,7 @@ const clickContinue = async (page) => {
   await page.waitForTimeout(1700);
   await shot(page, "26-ch2-cascade");
   await page.waitForFunction(() => window.__hydrogen.story.current.id === "spectrum", null, { timeout: 30000 });
-  const lines = await page.evaluate(() => [...window.__hydrogen.lab.spectrum.lines.values()].map((l) => +l.nm.toFixed(1)));
+  const lines = await page.evaluate(() => [...window.__hydrogen.tools.lab.spectrum.lines.values()].map((l) => +l.nm.toFixed(1)));
   if (!lines.includes(656.5) || !lines.includes(121.6)) errors.push(`spectrum lines after the 3s cascade: ${lines}`);
   await page.waitForTimeout(1500);
   await shot(page, "27-ch2-spectrum");
@@ -237,7 +242,7 @@ const clickContinue = async (page) => {
 }
 
 // ---------------------------------------------------------------- chapter 3 (deep link)
-{
+if (want("tour")) {
   const page = await open("#ch3");
   await page.locator("#begin-btn").click();
   await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
@@ -245,7 +250,7 @@ const clickContinue = async (page) => {
   await page.locator("#laser-nm").fill("121.9");
   await page.locator("#laser-nm").dispatchEvent("change");
   await page.waitForTimeout(300);
-  const tuned = await page.evaluate(() => window.__hydrogen.lab.nm);
+  const tuned = await page.evaluate(() => window.__hydrogen.tools.lab.nm);
   if (Math.abs(tuned - 121.57) > 0.02) errors.push(`snap (one photon): laser at ${tuned}`);
   await page.locator("#fire-btn").click();
   await page.waitForTimeout(2100);
@@ -277,7 +282,7 @@ const clickContinue = async (page) => {
   await clickContinue(page); // → climb
   await page.locator("#microwave-btn").waitFor({ state: "visible", timeout: 15000 });
   await page.locator("#microwave-btn").click();
-  await page.waitForFunction(() => window.__hydrogen.lab.atom.l === 1 && !window.__hydrogen.lab.busy, null, { timeout: 15000 });
+  await page.waitForFunction(() => window.__hydrogen.tools.lab.atom.l === 1 && !window.__hydrogen.tools.lab.busy, null, { timeout: 15000 });
   await page.waitForTimeout(1500);
   await shot(page, "35-ch3-3p-nodes");
   await page.locator("#microwave-btn").click();
@@ -297,8 +302,8 @@ const clickContinue = async (page) => {
 }
 
 // ---------------------------------------------------------------- resume + deep links
-{
-  const page = await open();
+if (want("tour")) {
+  const page = await open("#tour");
   await page.evaluate(() => localStorage.setItem("hydrogen-journey-v1", JSON.stringify({ chapter: 2, beat: 0, unlocked: 2 })));
   await page.reload();
   await page.waitForFunction(() => window.__hydrogen?.ready);
@@ -308,17 +313,19 @@ const clickContinue = async (page) => {
   await expectBeat(page, "2/ladder");
   await page.close();
 }
-{
+if (want("tour")) {
   const page = await open("#n3l2m0");
   await page.waitForTimeout(1500);
-  if (await page.evaluate(() => document.getElementById("sandbox-ui").hidden)) errors.push("#n3l2m0 should open the sandbox directly");
-  await shot(page, "16-sandbox-deeplink");
+  if (await page.evaluate(() => document.getElementById("lab-ui").hidden)) errors.push("#n3l2m0 should open the lab");
+  const at = await page.evaluate(() => ({ ...window.__hydrogen.lab.atom.state }));
+  if (at.n !== 3 || at.l !== 2 || at.m !== 0) errors.push(`#n3l2m0 should put the lab atom in 3d m=0, got ${JSON.stringify(at)}`);
+  await shot(page, "16-lab-deeplink");
   await page.close();
 }
 
 // ---------------------------------------------------------------- phone
-{
-  const page = await open("", PHONE);
+if (want("tour")) {
+  const page = await open("#tour", PHONE);
   await page.locator("#begin-btn").click();
   await clickContinue(page);
   await page.locator("#fallback-btn").waitFor({ state: "attached" });
@@ -333,7 +340,7 @@ const clickContinue = async (page) => {
   await shot(page, "18-phone-deeper");
   await page.close();
 }
-{
+if (want("tour")) {
   // Chapter 1 on a phone via deep link: taps, then the accessible fallback for the hold
   const page = await open("#ch1", PHONE);
   await page.locator("#begin-btn").click();
@@ -350,7 +357,7 @@ const clickContinue = async (page) => {
   await page.close();
 }
 
-{
+if (want("tour")) {
   const page = await open("#ch2", PHONE);
   await page.locator("#begin-btn").click();
   await clickContinue(page);
@@ -364,7 +371,7 @@ const clickContinue = async (page) => {
   await page.close();
 }
 
-{
+if (want("tour")) {
   const page = await open("#ch3", PHONE);
   await page.locator("#begin-btn").click();
   await page.locator("#prompt").waitFor({ state: "visible", timeout: 15000 });
@@ -379,7 +386,141 @@ const clickContinue = async (page) => {
   await page.close();
 }
 
+// ---------------------------------------------------------------- the lab (the default page)
+if (want("lab")) {
+  const page = await open("");
+  await page.waitForTimeout(1200);
+  if (await page.evaluate(() => document.getElementById("lab-ui").hidden)) errors.push("/ should open the lab");
+  const st = () => page.evaluate(() => ({ ...window.__hydrogen.lab.atom.state }));
+  const idle = () => page.waitForFunction(() => !window.__hydrogen.lab.atom.busy, null, { timeout: 30000 });
+  const tab = (t) => page.locator(`#lab-tabs button[data-tool="${t}"]`).click();
+  const rung = (n) => page.locator(n ? `#lab-ladder .rung-hit[data-n="${n}"]` : "#lab-ladder rect.rung-hit:not([data-n])").click();
+  const feed = () => page.locator("#feed-text").textContent();
+  const expectState = async (want, label) => {
+    const got = await st();
+    if (JSON.stringify(got) !== JSON.stringify(want)) errors.push(`${label}: expected ${JSON.stringify(want)}, got ${JSON.stringify(got)}`);
+  };
+
+  // measure: the first cloud is built by tapping
+  for (let i = 0; i < 10; i++) { await page.locator("#lab-measure-btn").click(); await page.waitForTimeout(60); }
+  await page.waitForTimeout(400);
+  await shot(page, "40-lab-measure");
+
+  // one twisted photon at the level-2 rung → 2p, m = +1 (a swirling ring)
+  await tab("light");
+  await page.locator('#photon-twist button[data-v="1"]').click();
+  await rung(2);
+  await page.locator("#lab-fire").click();
+  await page.waitForTimeout(1900);
+  await shot(page, "41-lab-twisted-absorption");
+  await idle();
+  await expectState({ n: 2, l: 1, m: 1 }, "1s + ⟲ photon at 10.2 eV");
+  await page.waitForTimeout(1200);
+  await shot(page, "42-lab-2p-swirl");
+
+  // let go: Lyman-α, carrying the twist away
+  await page.locator("#letgo-btn").click();
+  await page.waitForFunction(() => window.__hydrogen.lab.atom.state.n === 1 && !window.__hydrogen.lab.atom.busy, null, { timeout: 30000 });
+  const lines = await page.evaluate(() => [...window.__hydrogen.lab.spectrum.lines.values()].map((l) => +l.nm.toFixed(1)));
+  if (!lines.includes(121.6)) errors.push(`2p → 1s should emit 121.6 nm: ${lines}`);
+
+  // two photons with cancelling twists at the level-2 rung → 2s (still round)
+  await page.locator('#photon-count button[data-v="2"]').click();
+  await rung(2);
+  await page.locator("#lab-fire").click();
+  await idle();
+  await expectState({ n: 2, l: 0, m: 0 }, "two cancelling photons at 2 × 5.1 eV");
+  await page.waitForTimeout(800);
+  await shot(page, "43-lab-2s");
+  await page.locator("#letgo-btn").click();
+  await page.waitForFunction(() => window.__hydrogen.lab.atom.state.n === 1 && !window.__hydrogen.lab.atom.busy, null, { timeout: 30000 });
+
+  // two photons twisting the same way can't reach level 2 (no d there): blocked
+  await page.locator('#photon-twist button[data-v="2"]').click();
+  await rung(2);
+  await page.locator("#lab-fire").click();
+  await idle();
+  await expectState({ n: 1, l: 0, m: 0 }, "blocked two-photon");
+  if (!(await feed()).includes("nothing was absorbed")) errors.push(`blocked: feed says "${await feed()}"`);
+
+  // the wrong energy passes straight through
+  await page.evaluate(() => window.__hydrogen.lab.atom.fire({ count: 1, twist: 0, eV: 9.5 }));
+  await idle();
+  if (!(await feed()).includes("passed straight through")) errors.push(`miss: feed says "${await feed()}"`);
+
+  // enough energy frees the electron; then bring one back
+  await page.locator('#photon-count button[data-v="1"]').click();
+  await rung(0);
+  await page.locator("#lab-fire").click();
+  await idle();
+  if (!(await st()).ionized) errors.push("aiming above 0 eV should ionize");
+  await shot(page, "44-lab-ionized");
+  await page.locator("#recapture-btn").click();
+  await page.waitForTimeout(1500);
+  await expectState({ n: 1, l: 0, m: 0 }, "recapture");
+
+  // with a magnetic field, the ⟲ photon needs a little more energy: aim, fire, land in m = +1
+  await tab("magnet");
+  await page.locator("#field-b").fill("1.5");
+  await page.locator("#field-b").dispatchEvent("change");
+  await tab("light");
+  await page.locator('#photon-twist button[data-v="1"]').click();
+  await rung(2);
+  await page.waitForTimeout(400);
+  await shot(page, "45-lab-zeeman-ladder");
+  await page.locator("#lab-fire").click();
+  await idle();
+  await expectState({ n: 2, l: 1, m: 1 }, "Zeeman-shifted ⟲ absorption");
+
+  // the feed's ⓘ explains it, with maths
+  await page.locator("#feed-info").click();
+  await page.waitForFunction(() => document.querySelector("#info-physics math"), null, { timeout: 15000 });
+  await page.waitForTimeout(500);
+  await shot(page, "46-lab-info");
+  await page.locator("#info-close").click();
+
+  // view: jump to 3d, show nodes
+  await tab("view");
+  await page.locator('#view-picker .cell[data-n="3"][data-l="2"]').click();
+  await page.locator("#view-nodes").check();
+  await page.waitForTimeout(1800);
+  await shot(page, "47-lab-view-3d");
+
+  // scale: zoom out a million times
+  await tab("scale");
+  await page.locator("#scale-k").fill("6");
+  await page.locator("#scale-k").dispatchEvent("change");
+  await page.waitForTimeout(600);
+  await shot(page, "48-lab-scale");
+
+  const found = await page.evaluate(() => [...window.__hydrogen.lab.discoveries.done]);
+  for (const id of ["measure-10", "absorb", "swirl", "round", "blocked", "miss", "emit", "ionize", "zeeman", "scale"])
+    if (!found.includes(id)) errors.push(`discovery "${id}" was not ticked (have: ${found})`);
+  await page.locator("#try-toggle").click();
+  await page.waitForTimeout(300);
+  await shot(page, "49-lab-things-to-try");
+  await page.close();
+}
+if (want("lab")) {
+  const page = await open("", PHONE);
+  await page.waitForTimeout(1200);
+  for (let i = 0; i < 6; i++) { await page.locator("#lab-measure-btn").click(); await page.waitForTimeout(60); }
+  await shot(page, "50-phone-lab-measure");
+  await page.locator('#lab-tabs button[data-tool="light"]').click();
+  await page.locator('#photon-twist button[data-v="-1"]').click();
+  await page.locator("#lab-fire").click();
+  await page.waitForFunction(() => !window.__hydrogen.lab.atom.busy, null, { timeout: 30000 });
+  const s = await page.evaluate(() => ({ ...window.__hydrogen.lab.atom.state }));
+  if (s.m !== -1) errors.push(`phone: ⟳ photon should give m = −1, got ${JSON.stringify(s)}`);
+  await page.waitForTimeout(800);
+  await shot(page, "51-phone-lab-light");
+  await page.locator('#lab-tabs button[data-tool="light"]').click(); // tap the active tab: collapse the sheet
+  await page.waitForTimeout(800);
+  await shot(page, "52-phone-lab-collapsed");
+  await page.close();
+}
+
 await browser.close();
 server.close();
 if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-console.log("ok: prologue, chapters 1–3, drawer, glossary, menu, resume, deep links and phone layout checked; screenshots in tests/screenshots/");
+console.log("ok: lab (measure, light, twist, two photons, blocked, miss, ionize, magnet, info, view, scale, discoveries), tour (prologue, chapters 1–3), drawer, glossary, menu, resume, deep links and phone layout checked; screenshots in tests/screenshots/");

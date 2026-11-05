@@ -30,11 +30,11 @@ function zeros(f, lo, hi, steps) {
   return out;
 }
 
-export function nodeSet(n, l, m) {
+export function nodeSet(n, l, m, { complex = false } = {}) {
   const am = Math.abs(m);
   const radii = zeros((r) => radial(n, l, r), 1e-6, radialCutoff(n), 4000);
   const cones = zeros((t) => legendre(l, am, Math.cos(t)), 1e-6, Math.PI - 1e-6, 2000);
   const planes = [];
-  for (let k = 0; k < am; k++) planes.push(m > 0 ? ((2 * k + 1) * Math.PI) / (2 * am) : (k * Math.PI) / am);
+  if (!complex) for (let k = 0; k < am; k++) planes.push(m > 0 ? ((2 * k + 1) * Math.PI) / (2 * am) : (k * Math.PI) / am);
   return { radii, cones, planes, radial: radii.length, angular: cones.length + planes.length };
 }

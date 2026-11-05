@@ -2,15 +2,18 @@
 // Bars spring toward their values; hovering a bar shows its range and count.
 
 import { radial1s } from "./stats.js";
-
-const Y_MAX = 0.65; // P(r) for 1s peaks at 0.541 (r = 1 a₀)
+import { radial } from "../physics.js";
 
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 export class RadialChart {
-  constructor(histogram) {
+  constructor(histogram, root = document.getElementById("rchart")) {
     this.hist = histogram;
-    this.root = document.getElementById("rchart");
+    this.root = root;
+    this.theory = radial1s;
+    this.yMax = 0.65; // P(r) for 1s peaks at 0.541 (r = 1 a₀)
+    this.peakR = 1;
+    this.exactMean = 1.5;
     this.canvas = this.root.querySelector("canvas");
     this.footer = this.root.querySelector(".rchart-foot");
     this.readout = this.root.querySelector(".rchart-readout");
@@ -29,6 +32,19 @@ export class RadialChart {
   }
 
   get visible() { return !this.root.hidden; }
+
+  /** Compare against the exact P(r) = r²R_nl(r)² of state (n, l). */
+  setTheory(n, l) {
+    this.theory = (r) => (r * radial(n, l, r)) ** 2;
+    let best = 0, bestR = 0;
+    for (let i = 1; i <= 600; i++) {
+      const r = (i / 600) * this.hist.rMax, p = this.theory(r);
+      if (p > best) { best = p; bestR = r; }
+    }
+    this.yMax = best * 1.2;
+    this.peakR = bestR;
+    this.exactMean = 0.5 * (3 * n * n - l * (l + 1));
+  }
 
   show() {
     if (this.visible) return;
@@ -56,7 +72,7 @@ export class RadialChart {
     this.#draw();
     const { total, mean } = this.hist;
     this.footer.textContent = total
-      ? `${total.toLocaleString()} measured · average ${mean.toFixed(2)} a₀ (exact: 1.50)`
+      ? `${total.toLocaleString()} measured · average ${mean.toFixed(2)} a₀ (exact: ${this.exactMean.toFixed(2)})`
       : "No measurements yet";
     if (this.hover >= 0 && total) {
       const w = this.hist.width, n = this.hist.counts[this.hover];
@@ -80,7 +96,8 @@ export class RadialChart {
     const pw = w - l - r, ph = h - t - b;
     const { bins, rMax } = this.hist;
     const xOf = (rr) => l + (rr / rMax) * pw;
-    const yOf = (p) => t + ph * (1 - Math.min(p, Y_MAX) / Y_MAX);
+    const yMax = this.yMax;
+    const yOf = (p) => t + ph * (1 - Math.min(p, yMax) / yMax);
 
     // baseline + ticks
     g.strokeStyle = "rgba(170,179,195,.25)";
@@ -89,7 +106,8 @@ export class RadialChart {
     g.fillStyle = css("--muted");
     g.font = "11px Inter, system-ui, sans-serif";
     g.textAlign = "center";
-    for (let x = 0; x <= rMax; x++) g.fillText(x === 0 ? "0" : `${x}`, xOf(x), h - 6);
+    const tick = rMax <= 8 ? 1 : rMax <= 30 ? 5 : rMax <= 80 ? 10 : 20;
+    for (let x = 0; x <= rMax + 1e-9; x += tick) g.fillText(`${x}`, xOf(x), h - 6);
 
     // bars (2px gaps, rounded tops)
     const bw = pw / bins;
@@ -113,7 +131,7 @@ export class RadialChart {
     g.beginPath();
     for (let px = 0; px <= pw; px += 2) {
       const rr = (px / pw) * rMax;
-      const y = yOf(radial1s(rr));
+      const y = yOf(this.theory(rr));
       px ? g.lineTo(l + px, y) : g.moveTo(l + px, y);
     }
     g.stroke();
@@ -125,12 +143,13 @@ export class RadialChart {
       g.strokeStyle = css("--ink");
       g.lineWidth = 1;
       g.setLineDash([2, 3]);
-      g.beginPath(); g.moveTo(xOf(1) + 0.5, t); g.lineTo(xOf(1) + 0.5, t + ph); g.stroke();
+      const xp = xOf(this.peakR);
+      g.beginPath(); g.moveTo(xp + 0.5, t); g.lineTo(xp + 0.5, t + ph); g.stroke();
       g.setLineDash([]);
       g.fillStyle = css("--ink");
       g.textAlign = "left";
       g.font = "600 11px Inter, system-ui, sans-serif";
-      g.fillText("most likely: 1 a₀", xOf(1) + 5, t + 10);
+      g.fillText(`most likely: ${this.peakR.toFixed(1)} a₀`, xp + 5, t + 10);
       g.globalAlpha = 1;
     }
   }

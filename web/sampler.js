@@ -47,14 +47,19 @@ function invert({ xs, cdf }, u) {
   return xs[lo] + t * (xs[hi] - xs[lo]);
 }
 
-/** Build the three inverse-CDF tables for a (real) orbital. */
-export function buildTables(n, l, m) {
+/**
+ * Build the three inverse-CDF tables for an orbital. complex: the m-basis state, whose
+ * density doesn't depend on φ (uniform φ table); otherwise the real orbital.
+ */
+export function buildTables(n, l, m, { complex = false } = {}) {
   const absM = Math.abs(m);
   const rTable = cdfTable((r) => (r * radial(n, l, r)) ** 2, 0, radialCutoff(n), R_BINS);
   const cTable = cdfTable((c) => thetaPart(l, absM, c) ** 2, -1, 1, ANGLE_BINS);
-  const pTable = cdfTable((p) => phiPartReal(m, p) ** 2, 0, 2 * Math.PI, ANGLE_BINS);
+  const pTable = complex && m !== 0
+    ? cdfTable(() => 1 / (2 * Math.PI), 0, 2 * Math.PI, 8)
+    : cdfTable((p) => phiPartReal(m, p) ** 2, 0, 2 * Math.PI, ANGLE_BINS);
   return {
-    n, l, m, rTable, cTable, pTable,
+    n, l, m, complex: complex && m !== 0, rTable, cTable, pTable,
     // Normalization checks: each 1D integral must be 1 for a normalized ψ.
     norms: [rTable.total, cTable.total * pTable.total],
     radiusQuantile: (q) => invert(rTable, q),
@@ -85,7 +90,7 @@ export function makeRanks(count, seed = 1) {
  * Returns spherical coordinates (r, cosθ, φ) per particle and the sign of ψ there.
  */
 export function sampleState(tables, ranks) {
-  const { n, l, m, rTable, cTable, pTable } = tables;
+  const { n, l, m, rTable, cTable, pTable, complex } = tables;
   const count = ranks.length / 3;
   const sph = new Float32Array(count * 3);
   const sign = new Float32Array(count);
@@ -95,7 +100,7 @@ export function sampleState(tables, ranks) {
     const c = invert(cTable, ranks[3 * i + 1]);
     const p = invert(pTable, ranks[3 * i + 2]);
     sph[3 * i] = r; sph[3 * i + 1] = c; sph[3 * i + 2] = p;
-    sign[i] = Math.sign(radial(n, l, r) * thetaPart(l, absM, c) * phiPartReal(m, p)) || 1;
+    sign[i] = complex ? 1 : Math.sign(radial(n, l, r) * thetaPart(l, absM, c) * phiPartReal(m, p)) || 1;
   }
   return { sph, sign };
 }

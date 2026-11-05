@@ -59,16 +59,17 @@ import { buildMixture, mixtureWeight } from "../web/mixture.js";
 import { meanR } from "../web/physics.js";
 
 function weightedMoments(mix, c, s, phase, coherence = 1) {
-  const c2 = c * c, s2 = s * s, cross = 2 * c * s * Math.cos(phase) * coherence;
-  let W = 0, R = 0, Z = 0, wMax = 0;
+  const c2 = c * c, s2 = s * s, cs = 2 * c * s * coherence;
+  let W = 0, R = 0, X = 0, Y = 0, Z = 0, wMax = 0;
   for (let i = 0; i < mix.q.length; i++) {
-    const w = mixtureWeight(mix.psiA[i], mix.psiB[i], mix.q[i], c2, s2, cross);
+    const w = mixtureWeight(mix.ampA[i], mix.phA[i], mix.ampB[i], mix.phB[i], mix.q[i], c2, s2, cs, phase);
     const x = mix.pos[3 * i], y = mix.pos[3 * i + 1], z = mix.pos[3 * i + 2];
-    W += w; R += w * Math.hypot(x, y, z); Z += w * y; // world y = physics z
+    W += w; R += w * Math.hypot(x, y, z);
+    X += w * x; Y += w * -z; Z += w * y; // world (x, y, z) = physics (x, z, −y)
     wMax = Math.max(wMax, w);
   }
   const N = mix.q.length;
-  return { norm: W / N, r: R / W, z: Z / W, wMax };
+  return { norm: W / N, r: R / W, x: X / W, y: Y / W, z: Z / W, wMax };
 }
 
 test("1s+2s superposition: normalised weights and the breathing ⟨r⟩(t)", () => {
@@ -93,6 +94,22 @@ test("3s+2p superposition: the electron sloshes along z, ⟨z⟩ = 2cs·cosφ·�
   }
   // a statistical mixture (spontaneous emission) has no sloshing
   near(weightedMoments(mix, c, s, 0, 0).z, 0, 0.08, "⟨z⟩ incoherent");
+});
+
+test("1s + 2p(m=+1), the twisted superposition: a lump of charge circling the z-axis", () => {
+  const mix = buildMixture({ n: 1, l: 0, m: 0 }, { n: 2, l: 1, m: 1, complex: true }, 200000, 41);
+  const c = Math.SQRT1_2, s = Math.SQRT1_2;
+  const a = weightedMoments(mix, c, s, 0), b = weightedMoments(mix, c, s, Math.PI / 2);
+  const ra = Math.hypot(a.x, a.y), rb = Math.hypot(b.x, b.y);
+  // |⟨1s|x|2p±1⟩| = |⟨1s|y|2p±1⟩| = I/√6 with I = ∫R10 R21 r³ dr, so for c = s = 1/√2 the
+  // centre of charge circles the axis at radius I/√6 ≈ 0.527 a₀
+  const expected = radialDipole(1, 0, 2, 1) / Math.sqrt(6);
+  near(ra, rb, 0.06, "the lump keeps its distance from the axis");
+  near(ra, expected, 0.08, "lump radius");
+  const turn = Math.atan2(b.y, b.x) - Math.atan2(a.y, a.x);
+  near(Math.abs(Math.atan2(Math.sin(turn), Math.cos(turn))), Math.PI / 2, 0.15, "a quarter beat turns it 90°");
+  near(a.z, 0, 0.05, "no motion along z");
+  near(Math.hypot(weightedMoments(mix, c, s, 0, 0).x, weightedMoments(mix, c, s, 0, 0).y), 0, 0.06, "incoherent: no lump");
 });
 
 test("laser resonance detection picks the right ns level, with a forgiving tolerance", async () => {

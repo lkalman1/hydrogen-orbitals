@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hydrogen: A Journey</title>
-<meta name="description" content="An interactive journey through the quantum physics of the hydrogen atom, computed live from the Schrödinger equation.">
+<title>Hydrogen Lab</title>
+<meta name="description" content="An interactive hydrogen-atom lab: measure the electron, fire light at it, add a magnet. Computed live from the Schrödinger equation.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;650&display=swap">
@@ -26,12 +26,12 @@
 <!-- ============================================================ start -->
 <section id="start" hidden>
   <div class="start-inner">
-    <p class="eyebrow">An interactive journey into the quantum atom · about 13 minutes</p>
+    <p class="eyebrow">Guided tour · measuring the electron and climbing the energy ladder</p>
     <button id="begin-btn" class="btn btn-primary" type="button">Begin</button>
     <p class="sound">🎧 Best with sound on</p>
     <div class="start-links">
       <button id="resume-btn" class="btn" type="button" hidden>Resume</button>
-      <button id="start-sandbox" class="btn" type="button">Skip to the sandbox</button>
+      <button id="start-sandbox" class="btn" type="button">Back to the lab</button>
     </div>
   </div>
 </section>
@@ -129,8 +129,6 @@
     <div id="drawer-body"></div>
   </aside>
 
-  <div id="glossary-pop" role="tooltip" hidden></div>
-
   <div id="menu" hidden>
     <div class="menu-card panel" role="dialog" aria-label="Chapters">
       <h2>Chapters</h2>
@@ -138,59 +136,150 @@
       <div id="menu-list"></div>
       <div class="menu-foot">
         <button id="menu-restart" class="btn" type="button">Restart from the beginning</button>
-        <button id="menu-sandbox" class="btn" type="button">Explore the sandbox</button>
+        <button id="menu-sandbox" class="btn" type="button">Back to the lab</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ============================================================ sandbox -->
-<div id="sandbox-ui" hidden>
-  <section id="info" class="panel" aria-live="polite">
-    <div id="name">3dz²</div>
-    <div id="qn"></div>
-    <dl>
-      <dt>Energy</dt><dd id="energy"></dd>
-      <dt>Mean radius</dt><dd id="meanr"></dd>
-      <dt>Nodes</dt><dd id="nodes"></dd>
-      <dt>Shape</dt><dd id="shape"></dd>
-      <dt>Samples</dt><dd id="count"></dd>
+<!-- ============================================================ lab (the default) -->
+<div id="lab-ui" hidden>
+  <section id="lab-state" class="panel" aria-live="polite">
+    <div class="ls-head">
+      <span id="ls-name" class="ls-name">1s</span>
+      <button class="info-btn" type="button" data-info="state" aria-label="About the state">ⓘ</button>
+    </div>
+    <div class="ls-qn">
+      <button class="qn" type="button" data-info="n"><small>n</small><b id="ls-n">1</b></button>
+      <button class="qn" type="button" data-info="l"><small>l</small><b id="ls-l">0</b><em id="ls-letter">s</em></button>
+      <button class="qn" type="button" data-info="m"><small>m</small><b id="ls-m">0</b></button>
+    </div>
+    <p id="ls-desc" class="ls-desc"></p>
+    <dl class="ls-facts">
+      <dt>Energy</dt><dd id="ls-energy"></dd>
+      <dt>Size</dt><dd id="ls-size"></dd>
+      <dt>Lasts</dt><dd id="ls-life"></dd>
     </dl>
-    <div class="legend"><span><i style="background:var(--accent)"></i>ψ &gt; 0</span><span><i style="background:var(--accent-2)"></i>ψ &lt; 0</span></div>
   </section>
 
-  <section id="controls" class="panel">
-    <p class="section-label">Orbital (n, l)</p>
-    <div id="picker"></div>
-    <p class="section-label">Orientation (m)</p>
-    <div id="m-row"></div>
-    <div class="row">
-      <label><input type="checkbox" id="autorotate" checked> Auto-rotate camera</label>
-      <label>Samples
-        <select id="particles">
-          <option value="50000">50k</option>
-          <option value="100000">100k</option>
-          <option value="200000" selected>200k</option>
-          <option value="400000">400k</option>
-          <option value="800000">800k</option>
+  <section id="lab-try" class="panel">
+    <button id="try-toggle" class="try-head" type="button" aria-expanded="false" aria-controls="try-list">
+      <span>Things to try</span><b id="try-count">0</b>
+    </button>
+    <ol id="try-list" hidden></ol>
+  </section>
+
+  <div id="lab-top">
+    <button id="tour-btn" class="btn" type="button">Guided tour</button>
+  </div>
+
+  <section id="lab-spectrum" class="panel" hidden aria-label="Light given off by the atom">
+    <p class="spectrum-title">Light given off <span>(wavelength, nm)</span> <button class="info-btn" type="button" data-info="spectrum" aria-label="About the spectrum">ⓘ</button></p>
+    <canvas aria-hidden="true"></canvas>
+  </section>
+
+  <section id="lab-panel" class="panel">
+    <div class="tool" data-tool="measure" hidden>
+      <header><h3>Measure</h3><button class="info-btn" type="button" data-info="measure" aria-label="About measuring">ⓘ</button></header>
+      <button id="lab-measure-btn" class="measure-big" type="button">
+        <span class="dot" aria-hidden="true"></span><span class="label">Tap or hold to measure</span><span class="rate" aria-hidden="true"></span>
+      </button>
+      <p class="tool-hint">You can also tap the atom itself.</p>
+      <div class="row"><button id="lab-measure-reset" class="btn" type="button">Start over</button><span id="lab-measure-count" class="muted"></span></div>
+      <section id="lab-rchart" class="rchart-inline" hidden aria-label="Histogram of measured distances">
+        <p class="rchart-title">Distance from the proton <span>(a₀)</span></p>
+        <canvas aria-hidden="true"></canvas>
+        <p class="rchart-key"><i class="bar"></i>your measurements <i class="dash"></i>exact prediction</p>
+        <p class="rchart-foot"></p>
+        <p class="rchart-readout" hidden></p>
+      </section>
+    </div>
+
+    <div class="tool" data-tool="light" hidden>
+      <header><h3>Light</h3><button class="info-btn" type="button" data-info="light" aria-label="About the light tool">ⓘ</button></header>
+      <div class="light-grid">
+        <div id="lab-ladder" class="lab-ladder"></div>
+        <div class="light-controls">
+          <p class="tool-hint">Tap a rung to aim, or drag the arrow.</p>
+          <div class="seg-label">Photons <button class="info-btn" type="button" data-info="photons" aria-label="About one or two photons">ⓘ</button></div>
+          <div class="seg" id="photon-count" role="group" aria-label="Number of photons">
+            <button type="button" data-v="1" class="on">1</button><button type="button" data-v="2">2</button>
+          </div>
+          <div class="seg-label">Twist <button class="info-btn" type="button" data-info="twist" aria-label="About twist">ⓘ</button></div>
+          <div class="seg" id="photon-twist" role="group" aria-label="Twist"></div>
+          <p id="light-readout" class="light-readout"></p>
+          <button id="lab-fire" class="btn btn-primary fire" type="button">Fire</button>
+          <div class="row">
+            <button id="letgo-btn" class="btn" type="button">Let go</button>
+            <button class="info-btn" type="button" data-info="letgo" aria-label="About letting go">ⓘ</button>
+          </div>
+          <button id="recapture-btn" class="btn" type="button" hidden>Bring back an electron</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool" data-tool="magnet" hidden>
+      <header><h3>Magnet</h3><button class="info-btn" type="button" data-info="magnet" aria-label="About the magnet">ⓘ</button></header>
+      <label class="slider-row">Field strength
+        <input id="field-b" type="range" min="0" max="2" step="0.01" value="0" aria-label="Magnetic field in tesla">
+      </label>
+      <p id="field-readout" class="light-readout"></p>
+      <p class="tool-hint">The field points up the screen. Try it with a swirling cloud, then look at the ladder in the Light tool.</p>
+    </div>
+
+    <div class="tool" data-tool="view" hidden>
+      <header><h3>View</h3><button class="info-btn" type="button" data-info="view" aria-label="About the view options">ⓘ</button></header>
+      <p class="section-label">Jump to a state</p>
+      <div id="view-picker" class="picker"></div>
+      <div id="view-m" class="m-row"></div>
+      <label class="check"><input id="view-swirl" type="checkbox" checked> Show the swirl</label>
+      <label class="check"><input id="view-nodes" type="checkbox"> Show nodes (where it's never found)</label>
+      <label class="check"><input id="view-rotate" type="checkbox" checked> Turn the camera slowly</label>
+      <label class="check">Dots
+        <select id="view-samples">
+          <option value="50000">50k</option><option value="100000">100k</option><option value="200000" selected>200k</option><option value="400000">400k</option>
         </select>
       </label>
     </div>
-    <p class="hint"><kbd>↑</kbd><kbd>↓</kbd> n &nbsp; <kbd>←</kbd><kbd>→</kbd> l &nbsp; <kbd>,</kbd><kbd>.</kbd> m &nbsp; <kbd>space</kbd> rotate &nbsp;·&nbsp; drag, scroll</p>
+
+    <div class="tool" data-tool="scale" hidden>
+      <header><h3>Scale</h3><button class="info-btn" type="button" data-info="scale" aria-label="About scale">ⓘ</button></header>
+      <label class="slider-row">Zoom out
+        <input id="scale-k" type="range" min="0" max="10" step="0.01" value="0" aria-label="Zoom out by powers of ten">
+      </label>
+      <p id="scale-readout" class="light-readout"></p>
+    </div>
   </section>
 
-  <div id="sandbox-top">
-    <button id="journey-btn" class="btn" type="button">← The journey</button>
-    <button id="about-toggle" class="btn" type="button">What am I seeing?</button>
-  </div>
-  <section id="about" class="panel" hidden>
-    <h2>Every dot is a possible electron position</h2>
-    <p>Dots are exact random samples of |ψ|² for the chosen orbital, computed live from the solution of the Schrödinger equation. Dense regions are where a measurement would most likely find the electron.</p>
-    <p>Colour is the sign of ψ. It doesn't change the probability, but it matters when orbitals combine.</p>
-    <p><b>Honest caveats.</b> The view auto-zooms, so every orbital looks the same size on screen (real size grows like n²: see Mean radius). The camera rotates, not the atom: an orbital is a <i>stationary</i> state and its cloud never moves. The morph between orbitals is a visual interpolation. The proton is drawn thousands of times too large.</p>
-    <p>Units: a₀ = 0.0529 nm (the Bohr radius). z is up.</p>
+  <section id="lab-feed" aria-live="polite">
+    <p id="feed-text"></p>
+    <button id="feed-info" class="info-btn" type="button" aria-label="Explain this">ⓘ</button>
   </section>
+
+  <nav id="lab-tabs" aria-label="Tools">
+    <button type="button" data-tool="measure"><i aria-hidden="true">◎</i><span>Measure</span></button>
+    <button type="button" data-tool="light"><i aria-hidden="true">✦</i><span>Light</span></button>
+    <button type="button" data-tool="magnet"><i aria-hidden="true">⊕</i><span>Magnet</span></button>
+    <button type="button" data-tool="view"><i aria-hidden="true">◐</i><span>View</span></button>
+    <button type="button" data-tool="scale"><i aria-hidden="true">⤢</i><span>Scale</span></button>
+  </nav>
+
+  <div id="lab-found" role="status" hidden></div>
+  <svg id="lab-scale" hidden aria-hidden="true"></svg>
+  <div id="lab-measure-tag" class="measure-tag" hidden></div>
 </div>
+
+<aside id="info-drawer" class="panel" hidden aria-label="Explanation">
+  <header>
+    <div><p class="eyebrow">Explain</p><h2 id="info-title"></h2></div>
+    <button id="info-close" class="btn icon-btn" type="button" aria-label="Close">✕</button>
+  </header>
+  <p id="info-short" class="info-short"></p>
+  <p id="info-what" class="info-what"></p>
+  <div id="info-now" class="info-now" hidden><p class="eyebrow">What just happened</p><p id="info-now-text"></p></div>
+  <div id="info-physics" class="info-physics"></div>
+</aside>
+<div id="glossary-pop" role="tooltip" hidden></div>
 
 <script type="module" src="./main.js"></script>
 </body>

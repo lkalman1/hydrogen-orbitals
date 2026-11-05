@@ -1,11 +1,14 @@
-# Hydrogen: A Journey
+# Hydrogen Lab
 
-A guided, interactive journey (about 13 minutes) through the quantum physics of the
-hydrogen atom. It introduces the quantum numbers n, l and m one at a time, through
-the physical processes that change them. Every electron cloud is computed live from
-the exact solutions of the Schrödinger equation. Captions are written for middle
-school, with an optional "Go deeper" layer for undergraduates. There is an adaptive
-score, and a free-play sandbox at the end.
+An interactive hydrogen atom you explore for yourself, computed live from the Schrödinger
+equation.
+
+- **Measure** the electron and watch the cloud build up, one dot at a time.
+- **Fire light** at it: aim on the energy ladder, choose one or two photons and their twist.
+- **Add a magnet**, **zoom out** to see how small an atom is, or **jump** to any state.
+
+Every control has an ⓘ that explains it, from one line to the full physics, and "Things to
+try" suggests discoveries. A step-by-step **guided tour** is available too.
 
 **Play it:** https://lkalman1.github.io/hydrogen-orbitals/
 
@@ -13,13 +16,12 @@ score, and a free-play sandbox at the end.
 
 ```bash
 npm run serve          # or: python3 -m http.server 8000 -d web
-# open http://localhost:8000/            the journey
-#      http://localhost:8000/#ch1        a chapter
-#      http://localhost:8000/#n3l2m0     the sandbox at 3d z²
+# open http://localhost:8000/            the lab
+#      http://localhost:8000/#n3l2m1     the lab at 3d, m = +1
+#      http://localhost:8000/#tour       the guided tour
 ```
 
-**In the journey:** Enter or → continues, ← goes back, D opens Go deeper.
-**In the sandbox:** ↑↓ n, ←→ l, `,` `.` m, space toggles auto-rotate.
+**In the lab:** 1–5 switch tools, F fires, G lets go, Esc closes explanations. Drag to rotate, scroll to zoom.
 
 ## Python reference model
 
@@ -33,7 +35,7 @@ python hydrogen.py     # solves the radial equation numerically and writes figur
 ```bash
 npm install            # three.js, for the offline screenshot test
 npm test               # physics vs SciPy reference; story engine and content rules
-npm run screenshot     # end-to-end browser run of the journey (needs Playwright + Chromium)
+npm run screenshot     # end-to-end browser run (needs Playwright + Chromium); or screenshot:lab / screenshot:tour
 npm run reference      # regenerate tests/reference.json (needs SciPy)
 ```
 

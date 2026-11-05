@@ -60,6 +60,9 @@ export class Photons {
     };
   }
 
+  /** A point `scale` view-widths away along the physics z-axis (world y): +1 above, −1 below. */
+  alongZ(sign, scale = 0.75) { return new THREE.Vector3(0, sign * this.rig.dist * scale, 0); }
+
   /** A point `scale` view-widths away along a screen direction (radians, 0 = right). */
   offscreen(angle, scale = 0.75) {
     const { right, up } = this.axes();
@@ -76,7 +79,7 @@ export class Photons {
    * Launch a photon. from/to: THREE.Vector3 in world space (or functions returning one,
    * re-evaluated each frame so they follow the camera). Resolves when it arrives.
    */
-  spawn({ nm, from, to, duration = 0.9, label = true, dim = false, passThrough = false, color: rgb, text }) {
+  spawn({ nm, from, to, duration = 0.9, label = true, dim = false, passThrough = false, color: rgb, text, twist = 0 }) {
     const [r, g, b] = rgb ?? wavelengthRGB(nm);
     const color = new THREE.Color(r, g, b);
     const geo = new THREE.BufferGeometry();
@@ -94,7 +97,7 @@ export class Photons {
     const cycles = THREE.MathUtils.clamp(3 + 1800 / nm, 4, 12);
     return new Promise((resolve) => {
       this.list.push({
-        line, head, tag, from, to, duration, cycles, dim, passThrough, resolve,
+        line, head, tag, from, to, duration, cycles, dim, passThrough, resolve, twist: Math.sign(twist),
         start: performance.now() / 1000, arrived: false,
       });
     });
@@ -140,15 +143,17 @@ export class Photons {
       let perp = dir.clone().cross(back);
       if (perp.lengthSq() < 1e-6) perp = up.clone();
       perp.normalize();
-      const L = dist * 0.11, A = dist * 0.008;
+      const perp2 = dir.clone().cross(perp).normalize();       // for a twisted photon: a helix
+      const L = dist * 0.11, A = dist * (p.twist ? 0.011 : 0.008);
       const arr = p.line.geometry.attributes.position.array;
       for (let i = 0; i < POINTS; i++) {
         const u = i / (POINTS - 1) - 0.5;                       // −½ … ½ along the packet
         const env = Math.exp(-(u * u) / 0.05);
-        const disp = A * env * Math.sin(2 * Math.PI * (p.cycles * u - (now - p.start) * 2.2));
-        arr[3 * i] = centre.x + dir.x * u * L + perp.x * disp;
-        arr[3 * i + 1] = centre.y + dir.y * u * L + perp.y * disp;
-        arr[3 * i + 2] = centre.z + dir.z * u * L + perp.z * disp;
+        const ph = 2 * Math.PI * (p.cycles * u - (now - p.start) * 2.2);
+        const d1 = A * env * Math.sin(ph), d2 = p.twist ? A * env * Math.cos(ph) * p.twist : 0;
+        arr[3 * i] = centre.x + dir.x * u * L + perp.x * d1 + perp2.x * d2;
+        arr[3 * i + 1] = centre.y + dir.y * u * L + perp.y * d1 + perp2.y * d2;
+        arr[3 * i + 2] = centre.z + dir.z * u * L + perp.z * d1 + perp2.z * d2;
       }
       p.line.geometry.attributes.position.needsUpdate = true;
       const fade = Math.min(1, t * 6, (tEnd - t) * 6) * (p.dim ? 0.45 : 1);

@@ -10,6 +10,7 @@ import { OrbitalCloud } from "./cloud.js";
 import { CameraRig } from "./rig.js";
 import { SuperpositionCloud } from "./superposition.js";
 import { Photons } from "./photons.js";
+import { FieldLines } from "./field.js";
 
 const ORIGIN = new THREE.Vector3();
 
@@ -67,6 +68,7 @@ export function createStage(canvas, { reducedMotion = false, particles = 200000 
   });
   scene.add(superposition.object);
   const photons = new Photons(scene, rig, camera);
+  const field = new FieldLines(scene);
 
   // ---- proton: a glow sprite, kept a constant size on screen (it is drawn far too big: labelled in the story)
   const proton = {
@@ -144,13 +146,14 @@ export function createStage(canvas, { reducedMotion = false, particles = 200000 
     axes.scale.setScalar(Math.max(1e-3, axesScale.value));
 
     photons.update(now, dt);
+    field.update(now, dt, cloud.radius(0.95));
     for (const fn of frameHandlers) fn(now, dt);
     composer.render(dt);
     requestAnimationFrame(frame);
   }
 
   return {
-    renderer, scene, camera, rig, cloud, superposition, photons, proton, bloom,
+    renderer, scene, camera, rig, cloud, superposition, photons, field, proton, bloom,
     /** Provide a function returning the free {top, bottom} strip in CSS px. */
     setLayout(fn) { layout = fn; resize(); },
     resize,

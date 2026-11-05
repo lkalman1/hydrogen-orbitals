@@ -10,18 +10,20 @@ export const PROGRESS_KEY = "hydrogen-journey-v1";
 
 /**
  * Parse a location hash.
- *   #ch2      → { mode: "story", chapter: 2 }
- *   #sandbox  → { mode: "sandbox" }
- *   #n3l2m0   → { mode: "sandbox", orbital: { n: 3, l: 2, m: 0 } }  (also "#3,2,0")
+ *   #tour            → { mode: "story", chapter: null }   (the guided tour's start screen)
+ *   #ch2             → { mode: "story", chapter: 2 }
+ *   #lab, #sandbox   → { mode: "lab" }
+ *   #n3l2m0          → { mode: "lab", orbital: { n: 3, l: 2, m: 0 } }  (also "#3,2,0")
  */
 export function parseHash(hash, chapterCount) {
   const ch = hash.match(/^#ch(\d+)$/);
   if (ch && +ch[1] < chapterCount) return { mode: "story", chapter: +ch[1] };
-  if (hash === "#sandbox") return { mode: "sandbox" };
+  if (hash === "#tour") return { mode: "story", chapter: null };
+  if (hash === "#lab" || hash === "#sandbox") return { mode: "lab" };
   const orb = hash.match(/^#n(\d+)l(\d+)m(-?\d+)$/) ?? hash.match(/^#(\d+),(\d+),(-?\d+)$/);
   if (orb) {
     const [n, l, m] = orb.slice(1).map(Number);
-    if (isValid(n, l, m)) return { mode: "sandbox", orbital: { n, l, m } };
+    if (isValid(n, l, m)) return { mode: "lab", orbital: { n, l, m } };
   }
   return null;
 }

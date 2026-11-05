@@ -10,7 +10,7 @@ self.onmessage = ({ data }) => {
   try {
     let result;
     if (kind === "state") {
-      result = sampleState(buildTables(data.n, data.l, data.m), makeRanks(data.count, data.seed));
+      result = sampleState(buildTables(data.n, data.l, data.m, { complex: data.complex }), makeRanks(data.count, data.seed));
     } else if (kind === "mixture") {
       result = buildMixture(data.a, data.b, data.count, data.seed);
     } else {

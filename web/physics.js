@@ -84,6 +84,24 @@ export function psi(n, l, m, x, y, z) {
   return radial(n, l, r) * thetaPart(l, Math.abs(m), cosT) * phiPartReal(m, Math.atan2(y, x));
 }
 
+/**
+ * ψ_nlm at a Cartesian point as [amplitude ≥ 0, phase]. complex: the m-basis state
+ * R·Y_lm (Y_lm ∝ P_l^m e^{imφ}, a cloud that swirls about z); otherwise the real
+ * orbital (phase 0 or π).
+ */
+export function psiAmpPhase(n, l, m, complex, x, y, z) {
+  if (!complex || m === 0) {
+    const v = psi(n, l, m, x, y, z);
+    return [Math.abs(v), v < 0 ? Math.PI : 0];
+  }
+  const r = Math.hypot(x, y, z);
+  const cosT = r > 0 ? z / r : 1;
+  const am = Math.abs(m);
+  let v = radial(n, l, r) * thetaPart(l, am, cosT);
+  if (m < 0 && am % 2) v = -v; // Y_l^{-m} = (−1)^m conj(Y_l^m)
+  return [Math.abs(v), m * Math.atan2(y, x) + (v < 0 ? Math.PI : 0)];
+}
+
 /** Node counts: radial (spheres) + angular (planes/cones) = n − 1. */
 export const nodes = (n, l) => ({ radial: n - l - 1, angular: l });
 

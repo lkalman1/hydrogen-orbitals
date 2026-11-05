@@ -29,7 +29,7 @@ export class Transitions {
     return {
       a, b,
       mixture: this.sampling.mixture(a, b, count),
-      final: this.sampling.state(b.n, b.l, b.m, count, 1),
+      final: this.sampling.state(b.n, b.l, b.m, count, 1, !!b.complex),
       rA: buildTables(a.n, a.l, a.m).radiusQuantile(0.95),
       rB: buildTables(b.n, b.l, b.m).radiusQuantile(0.95),
     };
@@ -43,7 +43,7 @@ export class Transitions {
     const { stage } = this;
     const [mix, final] = await Promise.all([prep.mixture, prep.final]);
     const sup = stage.superposition;
-    sup.load(mix);
+    sup.load(mix, { realA: !(prep.a.complex && prep.a.m), realB: !(prep.b.complex && prep.b.m) });
     sup.set(1, 0);
     const dE = Math.abs(energyEV(prep.b.n) - energyEV(prep.a.n));
     const t0 = performance.now() / 1000;
@@ -55,7 +55,7 @@ export class Transitions {
     stage.frameRadius(prep.rA);
     await sleep(duration);
     // hand over to exact samples of b
-    stage.cloud.setState(prep.b.n, prep.b.l, prep.b.m, { mode: "instant", sample: final });
+    stage.cloud.setState(prep.b.n, prep.b.l, prep.b.m, { mode: "instant", sample: final, complex: !!prep.b.complex });
     stage.cloud.fadeTo(1, 0.3);
     this.active.ending = performance.now() / 1000;
     await sleep(0.3);

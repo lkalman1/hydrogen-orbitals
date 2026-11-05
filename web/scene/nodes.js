@@ -86,13 +86,13 @@ export class NodeSurfaces {
   }
 
   /** Build the surfaces for orbital (n, l, m), sized to radius R (a₀). */
-  set(n, l, m, R) {
-    const key = `${n},${l},${m}`;
+  set(n, l, m, R, { complex = false } = {}) {
+    const key = `${n},${l},${m},${complex}`;
     if (key === this.key && Math.abs(R - this.R) < 1e-6) return;
     this.key = key;
     this.R = R;
     for (const child of [...this.group.children]) { child.geometry.dispose(); child.material.dispose(); this.group.remove(child); }
-    const { radii, cones, planes } = nodeSet(n, l, m);
+    const { radii, cones, planes } = nodeSet(n, l, m, { complex });
     for (const r of radii) this.group.add(new THREE.Mesh(new THREE.SphereGeometry(r, 64, 40), surfaceMaterial(RADIAL_COLOR)));
     for (const t of cones) this.group.add(new THREE.Mesh(coneGeometry(t, R), surfaceMaterial(ANGULAR_COLOR)));
     for (const p of planes) this.group.add(new THREE.Mesh(planeGeometry(p, R), surfaceMaterial(ANGULAR_COLOR)));

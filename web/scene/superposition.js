@@ -1,13 +1,15 @@
 // Renders Ψ(t) = c·ψa·e^(−iEa t) + s·ψb·e^(−iEb t) with importance-weighted
 // particles (see ../mixture.js): positions are fixed exact samples of ½(|ψa|² + |ψb|²),
-// and each particle's brightness is its weight |Ψ(t)|²/q, computed in the shader.
+// and each particle's brightness is its weight |Ψ(t)|²/q, computed in the shader from
+// each state's amplitude and phase at that point.
 
 import * as THREE from "three";
 
 export class SuperpositionCloud {
   constructor({ pixelRatio = 1, colorPos, colorNeg }) {
     this.uniforms = {
-      uC2: { value: 1 }, uS2: { value: 0 }, uCross: { value: 0 },
+      uC2: { value: 1 }, uS2: { value: 0 }, uCS: { value: 0 }, uPhase: { value: 0 },
+      uRealA: { value: 1 }, uRealB: { value: 1 },
       uPointSize: { value: 2.2 }, uPixelRatio: { value: pixelRatio },
       uAlpha: { value: 0.5 }, uFade: { value: 0 }, uFlash: { value: 0 },
       uColorPos: { value: colorPos }, uColorNeg: { value: colorNeg },
@@ -18,18 +20,19 @@ export class SuperpositionCloud {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       vertexShader: /* glsl */ `
-        attribute float aPsiA, aPsiB, aQ, aSize;
-        uniform float uC2, uS2, uCross, uPointSize, uPixelRatio, uFlash;
+        attribute float aAmpA, aPhA, aAmpB, aPhB, aQ, aSize;
+        uniform float uC2, uS2, uCS, uPhase, uRealA, uRealB, uPointSize, uPixelRatio, uFlash;
         uniform vec3 uColorPos, uColorNeg;
         varying vec3 vColor;
         varying float vW;
         void main() {
-          float a2 = uC2 * aPsiA * aPsiA, b2 = uS2 * aPsiB * aPsiB;
-          float w = aQ > 0.0 ? (a2 + b2 + uCross * aPsiA * aPsiB) / aQ : 0.0;
+          float a2 = uC2 * aAmpA * aAmpA, b2 = uS2 * aAmpB * aAmpB;
+          float w = aQ > 0.0 ? (a2 + b2 + uCS * aAmpA * aAmpB * cos(aPhB - aPhA - uPhase)) / aQ : 0.0;
           vW = max(w, 0.0);
           if (vW < 0.003) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; vColor = vec3(0.0); return; }
-          // colour: sign of ψ in whichever state dominates here
-          float sgn = (a2 * sign(aPsiA) + b2 * sign(aPsiB)) / max(a2 + b2, 1e-12);
+          // colour: sign of ψ (real orbitals) in whichever state dominates here; swirling states are positive
+          float sA = mix(1.0, sign(cos(aPhA)), uRealA), sB = mix(1.0, sign(cos(aPhB)), uRealB);
+          float sgn = (a2 * sA + b2 * sB) / max(a2 + b2, 1e-12);
           vColor = mix(uColorNeg, uColorPos, 0.5 + 0.5 * sgn);
           vColor = mix(vColor, vec3(1.0, 0.96, 0.9), 0.35 * uFlash);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -51,11 +54,15 @@ export class SuperpositionCloud {
   }
 
   /** Load particles from buildMixture(). */
-  load({ pos, psiA, psiB, q, size }) {
+  load({ pos, ampA, phA, ampB, phB, q, size }, { realA = true, realB = true } = {}) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute("aPsiA", new THREE.BufferAttribute(psiA, 1));
-    geo.setAttribute("aPsiB", new THREE.BufferAttribute(psiB, 1));
+    geo.setAttribute("aAmpA", new THREE.BufferAttribute(ampA, 1));
+    geo.setAttribute("aPhA", new THREE.BufferAttribute(phA, 1));
+    geo.setAttribute("aAmpB", new THREE.BufferAttribute(ampB, 1));
+    geo.setAttribute("aPhB", new THREE.BufferAttribute(phB, 1));
+    this.uniforms.uRealA.value = realA ? 1 : 0;
+    this.uniforms.uRealB.value = realB ? 1 : 0;
     geo.setAttribute("aQ", new THREE.BufferAttribute(q, 1));
     geo.setAttribute("aSize", new THREE.BufferAttribute(size, 1));
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
@@ -70,7 +77,8 @@ export class SuperpositionCloud {
   set(c, s, phase = 0, coherence = 1) {
     this.uniforms.uC2.value = c * c;
     this.uniforms.uS2.value = s * s;
-    this.uniforms.uCross.value = 2 * c * s * Math.cos(phase) * coherence;
+    this.uniforms.uCS.value = 2 * c * s * coherence;
+    this.uniforms.uPhase.value = phase;
   }
 
   setFade(f) {

@@ -1,30 +1,63 @@
-# Project Tracker — The Hydrogen Atom: A Guided Journey
+# Project Tracker — Hydrogen Lab
 
-## Goal
+## Goal (reformulated 2026-11-05)
 
-A **10–15 minute guided, interactive experience** that walks through the quantum
-physics of hydrogen and builds intuition one step at a time. The three quantum
-numbers are introduced **one at a time, each through the physical process that
-changes it**:
-
-1. **n**: the atom absorbs light and climbs in energy and size.
-2. **l**: a photon's own angular momentum reshapes the cloud.
-3. **m**: a magnetic field gives space a direction, and the orientations split apart.
-
-It ends in a free-play sandbox (the M1 viewer).
+An **exploratory demo, not a lesson**. You're dropped straight into a lab with one hydrogen atom
+and a set of tools, and you find things out for yourself. Every feature carries its own
+explanation (ⓘ: one line → what it does → the physics with equations), a glossary, and a
+plain-words "what just happened" feed. Optional **Things to try** goals tick off as you
+discover things. The original guided journey is kept as an optional **Guided tour**.
 
 **Principles**
-- **Physically exact.** Every cloud, energy, wavelength and splitting is computed from the equations. Every simplification is shown on screen.
-- **Juicy.** Spring physics, anticipation and follow-through, particle bursts, light, and camera moves that direct attention.
-- **Immersive sound.** An original adaptive score plus sound effects tied to the physics, all of which can be muted.
-- **Learn by doing.** Each idea is earned through one interaction, not just read.
-- **Two depths.** The main path is engaging for **middle school**. An optional **"Go deeper"** layer adds undergraduate and early-graduate detail. Nobody is forced into the maths, and nothing is dumbed down for those who want it.
+- **Physically exact.** Every cloud, energy, wavelength, selection rule and transition comes from the equations. Every exaggeration is labelled (time slowed, Zeeman ×1000).
+- **Explore first.** No forced order and no Continue buttons in the lab. Explanations are always one tap away.
+- **Measurement is the visual grammar.** Clouds are built from measurement dots, and new clouds rain in.
+- **The increments matter more than the wavelength.** Light is aimed on the energy ladder; wavelength and colour are secondary labels.
+- **Quantum numbers always visible:** n, l (with s/p/d/f) and m.
+- **Desktop-first; phones get a dedicated layout.**
 
-Status legend: ✅ done · 🟡 in progress · ⬜ not started · 🧪 needs verification · ❓ open decision
+Status legend: ✅ done · 🟡 in progress · ⬜ not started · 🧪 needs verification
+
+## Lab milestones
+
+| #  | Milestone | Status | Done when |
+|----|-----------|--------|-----------|
+| L1 | Lab shell: one scene, tool dock, state card (n, l, m, s/p/d), ⓘ info drawer (3 layers), glossary, feed | ✅ 2026-11-05 | Every control and readout has an ⓘ |
+| L2 | Light tool: aim on the ladder (tap a rung or drag), 1 or 2 photons, twist; general absorption, emission, ionization from any state | ✅ 2026-11-05 | Selection rules, CG odds, ionization, decay all unit-tested |
+| L3 | Swirl: m-basis states with probability-current flow; twisted superposition = circling lump | ✅ 2026-11-05 | Lump radius I/√6 and 90° per quarter-beat tested |
+| L4 | Magnet: field lines, split rungs, twist-dependent photon energies, split lines | ✅ 2026-11-05 | Zeeman-shifted absorption tested |
+| L5 | Scale: powers-of-ten zoom with real-object outlines and scale bar | ✅ 2026-11-05 | |
+| L6 | Things to try (14 discoveries) + discovery cards; music layers follow the atom | ✅ 2026-11-05 | 10 of them ticked by the end-to-end run |
+| L7 | Polish: real-device check, sound mix, accessibility pass, onboarding hint timing | ⬜ | Playtest with 3+ people |
+| L8 | Composed score and sound effects in place of the placeholders | ⬜ | Audio track A2–A4 |
+
+### What's in the lab
+
+| Tool | You… | Physics |
+|---|---|---|
+| **Measure** | tap or hold (or tap the atom); "Start over"; histogram vs the exact P(r) of the current state | Born rule; exact samples |
+| **Light** | tap a rung or drag the arrow; 1 or 2 photons; twist ⟲ / none / ⟳ (two photons: cancel / ⟲⟲ / ⟳⟳); Fire; Let go; Bring back an electron | One photon Δl = ±1, Δm = twist; two photons Δl = 0, ±2, Δm = net twist; odds from radial dipole × Clebsch–Gordan; ionization above the binding energy; decays by true branching ratios with m′ from CG² and photon twist = Δm; 2s two-photon decay |
+| **Magnet** | field 0–2 T along z | Normal Zeeman, μ_B·B·m, shown ×1000 with the real value in the readout; spin not modelled |
+| **View** | jump to any state (n × l grid + m), swirl on/off, node surfaces, camera rotation, dot count | m-basis rings; nodes as cones (no φ planes for m-states) |
+| **Scale** | zoom out up to 10¹⁰× | Outlines: molecule → virus → cell → hair → hand |
+
+Twisted light travels along z; untwisted light comes from the side, polarized along z. Two photons arrive from opposite sides.
+
+### Known issues / follow-ups
+- 🧪 Not yet seen on a real GPU or heard on speakers (headless Chromium only).
+- Two-photon odds between allowed shapes (e.g. 1s → 3s vs 3d) are set equal, which is stated in ⓘ; real odds depend on polarization.
+- Zeeman sub-rungs are drawn for n ≤ 4 only, to avoid overlap; the physics includes them for all n.
+- The 2D ladder uses a broken axis between n = 1 and n = 2, which is marked on the drawing.
 
 ---
 
-## Milestones
+# Guided tour (kept as an option)
+
+The sections below are the original linear-journey plan. Chapters 0–3 are built and reachable
+from the lab's **Guided tour** button (or `#tour`, `#ch1`…); Chapters 4–5 are placeholders that
+end in the lab.
+
+## Guided tour milestones (original plan)
 
 | #   | Milestone | Status | Done when |
 |-----|-----------|--------|-----------|
@@ -436,6 +469,7 @@ The chord can anchor the main theme's harmony.
 ---
 
 ## Changelog
+- **2026-11-05:** **Scope reformulated: Hydrogen Lab** (branch `m6-lab`). The default page is now an exploratory lab with Measure, Light, Magnet, View and Scale tools; ⓘ explanations, glossary, feed and Things to try. New physics: general selection rules with Clebsch–Gordan odds (`rules.js`), m-basis states with a probability-current swirl, complex-phase superpositions (the circling lump), ionization and recapture, Zeeman splitting, twisted-photon helices, field lines, powers-of-ten scale. The sandbox merged into the lab's View tool; the guided journey stays as an optional tour. 43 unit tests; end-to-end lab run on desktop and phone.
 - **2026-11-03:** **M5 complete** (branch `m5-chapter3`). Chapter 3: single-photon absorption (1s → 2p with dipole sloshing), the aim game showing Δl = ±1, the centrifugal close-up, a microwave climb 3s → 3p → 3d with 3D node surfaces and counter, and the l ≤ n − 1 limit. 34 unit tests.
 - **2026-11-02:** GitHub Pages deployment: CI runs the unit tests, then publishes `web/` to https://lkalman1.github.io/hydrogen-orbitals/ on every push to `main`.
 - **2026-11-01:** **M4 complete** (branch `m4-chapter2`). Chapter 2: tunable laser, two-photon absorption with exact superposition rendering, energy ladder, quantum-jump cascades with true branching ratios, emission spectrum. Added the spectroscopy module, background sampling worker, photon system, and new sounds and content. 30 unit tests.

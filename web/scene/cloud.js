@@ -9,10 +9,15 @@
 // with a brief flash. Particles are independent samples, so revealing them in index
 // order is a fair sequence of measurements.
 //
+// Swirl (m-basis states, m ≠ 0): the probability current circulates about z with
+// angular velocity ∝ m/ρ² (ρ = distance from the axis). The density doesn't depend on
+// φ, so moving every particle's φ at that rate keeps the cloud exactly |ψ|² while
+// showing the flow. The rate is scaled to be watchable and capped near the axis.
+//
 // Axes: physics z (the quantization axis) is drawn pointing up the screen.
 
 import * as THREE from "three";
-import { isValid } from "../physics.js";
+import { isValid, meanR } from "../physics.js";
 import { buildTables, makeRanks, sampleState } from "../sampler.js";
 
 const COLOR_POS = new THREE.Color("#4ea8ff");
@@ -23,6 +28,7 @@ const HIDDEN = 1e9, ALWAYS = -1e9;
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 // Start order: mostly by radius rank (inner first), jittered so no sharp shell forms.
+const SWIRL_OMEGA_MAX = 6; // rad/s
 const delayRank = (ranks, i) => 0.65 * ranks[3 * i] + 0.35 * fract(ranks[3 * i + 1] * 97.31 + ranks[3 * i + 2] * 13.7);
 
 export class OrbitalCloud {
@@ -33,6 +39,8 @@ export class OrbitalCloud {
     this.morph = { start: -Infinity, duration: 1.3, spread: 0.45 };
     this.fade = { value: 1, from: 1, to: 1, start: 0, duration: 0 };
     this.revealed = Infinity; // number of measured (visible) particles; Infinity = all shown
+    this.swirlRate = 1;       // 0 freezes the swirl (View option)
+    this.swirlClock = 0;      // advances at swirlRate; drives the swirl
     this.uniforms = {
       uMix: { value: 1 },
       uSpread: { value: 0.45 },
@@ -44,6 +52,7 @@ export class OrbitalCloud {
       uTime: { value: 0 },
       uFlash: { value: 1 },   // brightness of the flash when a particle is measured
       uSparse: { value: 0 },  // 0–1: enlarge/brighten dots while there are only a few
+      uSwirlM: { value: 0 }, uSwirlK: { value: 0 }, uSwirlRho0: { value: 1 }, uSwirlT0: { value: 0 }, uSwirlClock: { value: 0 },
       uColorPos: { value: COLOR_POS },
       uColorNeg: { value: COLOR_NEG },
     };
@@ -59,6 +68,7 @@ export class OrbitalCloud {
         attribute vec3 aRank;      // the particle's fixed uniform ranks
         attribute float aBorn;     // time the particle was measured (future = hidden)
         uniform float uMix, uSpread, uPointSize, uPixelRatio, uPulse, uTime, uFlash, uSparse;
+        uniform float uSwirlM, uSwirlK, uSwirlRho0, uSwirlT0, uSwirlClock;
         uniform vec3 uColorPos, uColorNeg;
         varying vec3 vColor;
         varying float vBoost;
@@ -82,6 +92,11 @@ export class OrbitalCloud {
           t = t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0; // ease in-out cubic
           float thetaFrom = acos(aFrom.y), thetaTo = acos(aTo.y);
           vec3 s = vec3(mix(aFrom.x, aTo.x, t), cos(mix(thetaFrom, thetaTo, t)), mix(aFrom.z, aTo.z, t));
+          if (uSwirlM != 0.0) {                                  // probability current: dφ/dt ∝ m/ρ²
+            float rho = s.x * sqrt(max(0.0, 1.0 - s.y * s.y));
+            float omega = clamp(uSwirlK * uSwirlM / max(rho * rho, uSwirlRho0 * uSwirlRho0), -${SWIRL_OMEGA_MAX.toFixed(1)}, ${SWIRL_OMEGA_MAX.toFixed(1)});
+            s.z += omega * (uSwirlClock - uSwirlT0);
+          }
           vec4 mv = modelViewMatrix * vec4(toWorld(s), 1.0);
           gl_Position = projectionMatrix * mv;
 
@@ -142,6 +157,15 @@ export class OrbitalCloud {
 
   // Where each particle is right now (replicates the shader), so an interrupted morph
   // continues from the current positions instead of jumping.
+  /** Angle (rad) the swirl has carried a particle at (r, cosθ) since the state began. */
+  #swirlOffset(r, c, now) {
+    const u = this.uniforms;
+    if (!u.uSwirlM.value) return 0;
+    const rho = r * Math.sqrt(Math.max(0, 1 - c * c));
+    const omega = Math.max(-SWIRL_OMEGA_MAX, Math.min(SWIRL_OMEGA_MAX, u.uSwirlK.value * u.uSwirlM.value / Math.max(rho * rho, u.uSwirlRho0.value ** 2)));
+    return omega * (this.swirlClock - u.uSwirlT0.value);
+  }
+
   currentSpherical(now) {
     const { start, duration, spread } = this.morph;
     const mix = Math.min(1, (now - start) / duration);
@@ -154,7 +178,7 @@ export class OrbitalCloud {
       const thF = Math.acos(from[3 * i + 1]), thT = Math.acos(to[3 * i + 1]);
       sph[3 * i] = from[3 * i] + (to[3 * i] - from[3 * i]) * t;
       sph[3 * i + 1] = Math.cos(thF + (thT - thF) * t);
-      sph[3 * i + 2] = from[3 * i + 2] + (to[3 * i + 2] - from[3 * i + 2]) * t;
+      sph[3 * i + 2] = from[3 * i + 2] + (to[3 * i + 2] - from[3 * i + 2]) * t + this.#swirlOffset(sph[3 * i], sph[3 * i + 1], now);
       outSign[i] = sign[2 * i] + (sign[2 * i + 1] - sign[2 * i]) * t;
     }
     return { sph, sign: outSign };
@@ -164,14 +188,15 @@ export class OrbitalCloud {
    * Move to state (n, l, m).
    * mode: "morph" (from current positions), "instant", or "condense" (fall in from a wide spiral).
    * sample: precomputed { sph, sign } for this cloud's ranks (e.g. from the worker).
+   * complex: the m-basis state (a ring that swirls about z) rather than the real orbital.
    */
-  setState(n, l, m, { mode = "morph", duration, spread, sample } = {}) {
+  setState(n, l, m, { mode = "morph", duration, spread, sample, complex = false } = {}) {
     if (!isValid(n, l, m)) return false;
     const now = performance.now() / 1000;
     const start = this.target && mode === "morph" ? this.currentSpherical(now) : null;
 
-    this.state = { n, l, m };
-    this.tables = buildTables(n, l, m);
+    this.state = { n, l, m, complex: complex && m !== 0 };
+    this.tables = buildTables(n, l, m, { complex });
     this.target = sample ?? sampleState(this.tables, this.ranks);
 
     const { aFrom, aTo, aSign } = this.points.geometry.attributes;
@@ -201,6 +226,11 @@ export class OrbitalCloud {
       spread: spread ?? defaults.spread,
     };
     this.uniforms.uSpread.value = this.morph.spread;
+    const u = this.uniforms, rMean = meanR(n, l);
+    u.uSwirlM.value = this.state.complex ? m : 0;
+    u.uSwirlK.value = 1.05 * rMean * rMean; // ~6 s per turn at ρ = ⟨r⟩ for |m| = 1
+    u.uSwirlRho0.value = 0.15 * rMean;
+    u.uSwirlT0.value = this.swirlClock;
     this.uniforms.uPulse.value = mode === "morph" ? 0.8 : 0;
     return true;
   }
@@ -273,6 +303,8 @@ export class OrbitalCloud {
 
   update(now, dt) {
     this.uniforms.uTime.value = now;
+    this.swirlClock += dt * this.swirlRate;
+    this.uniforms.uSwirlClock.value = this.swirlClock;
     this.uniforms.uMix.value = Math.min(1, (now - this.morph.start) / this.morph.duration);
     this.uniforms.uPulse.value *= Math.exp(-dt * 4);
     const f = this.fade;

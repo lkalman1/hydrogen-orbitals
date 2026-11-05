@@ -9,8 +9,8 @@ const fx = (nm) => Math.log(nm / LO) / Math.log(HI / LO);
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 export class Spectrum {
-  constructor() {
-    this.root = document.getElementById("spectrum");
+  constructor(root = document.getElementById("spectrum")) {
+    this.root = root;
     this.canvas = this.root.querySelector("canvas");
     this.lines = new Map(); // nm (rounded to 0.1) → { nm, count, flash }
   }

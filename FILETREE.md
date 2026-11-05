@@ -18,14 +18,23 @@ hydrogen/
 ├── web/                      the experience: static files, no build step
 │   ├── index.html            page structure: start screen, story UI, sandbox UI, import map
 │   ├── styles.css            all styles (tokens, story, drawer, menu, sandbox, phone, reduced motion)
-│   ├── main.js               boot + routing (#ch0–#ch5, #sandbox, #n3l2m0)
+│   ├── main.js               boot + routing (lab by default; #n3l2m0; #tour, #ch0–#ch5)
 │   ├── physics.js            ψ_nlm, R_nl, Y_lm, energies, moments (M0 core)
 │   ├── sampler.js            exact inverse-CDF sampling of |ψ|² (M0 core)
 │   ├── spectroscopy.js       reduced-mass levels, wavelengths, Einstein A, lifetimes, colours
 │   ├── mixture.js            exact importance-weighted particles for superpositions
 │   ├── nodes.js              node geometry: radial spheres, angular cones and planes
+│   ├── rules.js              light–atom rules from any state: Δl/Δm, Clebsch–Gordan odds, Zeeman, ionization, decay
 │   ├── sample-worker.js      background worker: state and mixture sampling
-│   ├── sandbox.js            free-exploration UI (the M1 viewer) on the shared stage
+│   ├── lab/                  the Hydrogen Lab (the default page)
+│   │   ├── app.js            the lab UI: tools, state card, feed, info drawer, things to try, picker
+│   │   ├── atom.js           the lab's atom: fire light, absorb/ionize, let go (cascade), recapture, field
+│   │   ├── ladder.js         SVG energy ladder that is also the light control (aim, snap, split rungs)
+│   │   ├── info.js           ⓘ content for every feature + extra physics entries
+│   │   ├── narrator.js       "what just happened" sentences for every event
+│   │   ├── discoveries.js    Things to try: goals, detection, persistence
+│   │   ├── scale.js          powers-of-ten zoom with object outlines and scale bar
+│   │   └── text.js           glossary chips and TeX → MathML rendering
 │   ├── scene/
 │   │   ├── stage.js          renderer, bloom, proton glow, axes, layout framing, frame loop
 │   │   ├── cloud.js          particle cloud: shader, morph / condense / instant, fades, measurement reveal
@@ -35,7 +44,8 @@ hydrogen/
 │   │   ├── transition.js     coherent (laser) and incoherent (quantum-jump) transitions
 │   │   ├── sampling.js       promise client for the worker (main-thread fallback)
 │   │   ├── photons.js        photon wave packets, laser beam, flashes
-│   │   └── nodes.js          3D node surfaces (rim-glow spheres, cones, planes)
+│   │   ├── nodes.js          3D node surfaces (rim-glow spheres, cones, planes)
+│   │   └── field.js          magnetic field lines with flowing arrows
 │   ├── story/
 │   │   ├── engine.js         pure chapter → beat state machine, persistence, deep links
 │   │   ├── chapters.js       journey content (Ch 0–3 done; Ch 4–5 placeholders)
@@ -58,6 +68,7 @@ hydrogen/
 │   ├── story.test.mjs        story engine, content rules, audio timing, measurement stats (node --test)
 │   ├── spectroscopy.test.mjs wavelengths, lifetimes, branching, superposition rendering, resonance
 │   ├── nodes.test.mjs        node radii, cones, planes; n − 1 nodes for every orbital
+│   ├── rules.test.mjs        Clebsch–Gordan, selection rules, two photons, ionization, Zeeman, decay
 │   ├── screenshot.mjs        end-to-end browser run + screenshots
 │   └── screenshots/          (generated — not committed)
 └── node_modules/             (npm install — not committed)
@@ -75,7 +86,8 @@ files (Ogg Opus + AAC), added in A2–A3.
 | `figures/*.png` | Static plots | `python hydrogen.py` | ❌ |
 | `web/index.html`, `web/styles.css`, `web/main.js` | Page shell, styles, boot | — | ✅ |
 | `web/physics.js`, `web/sampler.js` | Physics core | — | ✅ |
-| `web/sandbox.js` | Sandbox UI | — | ✅ |
+| `web/lab/*.js` | The Hydrogen Lab | — | ✅ |
+| `web/rules.js` | Light–atom rules | — | ✅ |
 | `web/scene/*.js` | 3D stage | — | ✅ |
 | `web/story/*.js` | Story engine, UI and content | — | ✅ |
 | `web/audio/*.js` | Audio engine and cue sheet | — | ✅ |
